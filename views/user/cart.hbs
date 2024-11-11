@@ -1,0 +1,258 @@
+<link rel="stylesheet" href="/user/styles/home.css">
+<link rel="stylesheet" href="/user/styles/cart.css">
+
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumbs">
+    <li class="breadcrumb-item">
+      <a href="/">Home</a>
+    </li>
+    <li class="breadcrumb-item">
+      <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/bfd80c0d91b083fd6615c46809d59a6436c7d8053b049a460c5e712a453a7f67?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="" class="breadcrumb-separator" />
+      <a>User</a>
+    </li>
+    <li class="breadcrumb-item breadcrumb-current">
+      <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/bfd80c0d91b083fd6615c46809d59a6436c7d8053b049a460c5e712a453a7f67?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="" class="breadcrumb-separator" />
+      <span aria-current="page">Shopping Cart</span>
+    </li>
+  </ol>
+</nav>
+
+<section class="cart-container">
+  <div class="cart-content">
+    <main class="cart-main">
+      <h1 class="cart-title">Shopping Cart</h1>
+      <div class="products-list">
+
+        <!-- Cart Item -->
+        {{#each cartItems}}
+          <article class="cart-product-item">
+            <button class="remove-btn" aria-label="Remove item" onclick="removeItem('{{@index}}','{{this.cartItem_id}}','{{this.product_id}}')">
+              <i class="las la-trash-alt fs-5"></i>
+            </button>
+            <div class="position-relative">
+              {{#if (gt (length this.coupons) 0)}}
+                <span class="coupon-detail">Coupon</span>
+              {{/if}}
+              <img src="{{this.thumb}}" alt="{{this.name}}" class="cart-product-image">
+            </div>
+            <div class="cart-product-details">
+              <div class="cart-product-info">
+                <a href="/view-product/{{this.slug}}" class="cart-product-name m-0">{{this.name}}</a>
+                {{!-- <p class="product-id m-0">In: {{this.category}}</p> --}}
+                <div class="coupon d-inline-flex align-items-center">
+                  <div class="d-inline-flex">
+                    <p class="product-price-single"><span class="fw-normal me-2">Coast:</span><span>{{this.price}}</span></p>
+                  </div>
+                  
+                </div>
+                {{#if this.offer_count}}
+                  <div class="d-inline-flex align-items-center my-1">
+                    <label class="offer-detail m-0">Saved <span class="offer_val price">{{this.offer_value}}</span> OFF from <span class="offer_count">{{this.offer_count}}</span> offers</label>
+                  </div>
+                {{/if}}
+                
+                <p class="max-quantity-info m-0">Max. of <b>{{this.max_quantity}}</b> items can add to your cart</p>
+                {{!-- <div class="d-flex">
+                  {{#if (gt (length this.coupons) 0)}}
+                  {{#if this.offer_count}}<span class="devider"></span>{{/if}}
+                  <div class="d-inline-flex align-items-center coupon-detail" aria-label="5% discount">
+                    <input type="checkbox" id="coupon{{@index}}" class="form-check-input coupon-check" onchange="applyCoupon(this,'{{json this.coupons}}')">
+                    <label for="coupon{{@index}}" class="input-label m-0 ms-2">Apply coupon</label>
+                  </div>
+                  {{/if}}
+                </div> --}}
+              </div>
+            </div>
+            <div class="product-controls">
+                
+              <p class="cart-product-price m-0">{{this.item_total}}</p>
+              
+              <div class="quantity-control">
+                <button class="quantity-btn" onclick="handleQuantityChange('decrease','{{this.product_id}}')" aria-label="Decrease quantity">
+                  <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/e263d8c55fe3890fe8fa8a69f71f9c02c5f21c0d6d0315f21b0858b9913f8148?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="" >
+                </button>
+                <input type="number" value="{{this.quantity}}" oninput="handleQuantityChange(this,'{{this.product_id}}')" min="1" class="quantity-input" aria-label="Product quantity">
+                <button class="quantity-btn" onclick="handleQuantityChange('increase','{{this.product_id}}')" aria-label="Increase quantity">
+                  <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/569af448bab5116d5c04bcdb7d98cd196950630b6f82ce95035e99b51dbef370?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="" >
+                </button>
+                
+              </div>
+            </div>
+          </article>
+        {{else}}
+          <div class="d-flex border w-100 justify-content-center rounded py-5">
+            <h5 class="m-0">Cart is empty now</h5>
+          </div>
+        {{/each}}
+
+      </div>
+    </main>
+
+    <aside class="cart-summary">
+      <h2 class="summary-title">Order Summary</h2>
+      <div class="summary-content">
+        {{!-- <form class="promo-section">
+          <label for="promoCode" class="input-label">Discount code / Promo code</label>
+          <input type="text" id="promoCode" class="cart-input-field promo-code-input" placeholder="Code" readonly>
+        </form> --}}
+
+        <form class="bonus-section">
+          <label for="bonusCard" class="input-label">Your bonus card number</label>
+          <div class="cart-input-field">
+            <input type="text" id="bonusCard" placeholder="Enter Card Number">
+            <button type="button" class="apply-btn">Apply</button>
+          </div>
+        </form>
+
+        <div class="summary-totals">
+          <div class="total-row">
+            <span class="total-label">Subtotal</span>
+            <span class="total-amount sub-total">{{this.subtotal}}</span>
+          </div>
+          <div class="total-row">
+            <span class="total-label">Estimated Tax</span>
+            <span class="total-amount total-tax">{{this.tax}}</span>
+          </div>
+          <div class="total-row">
+            <span class="total-label">Estimated shipping & Handling</span>
+            <span class="total-amount">0</span>
+          </div>
+          <div class="total-row">
+            <span class="total-label">Discounts</span>
+            <div>
+              -
+              <span class="total-amount discount-val">{{this.discounts}}</span>
+            </div>
+          </div>
+          <div class="total-row">
+            <span class="total-label">Total</span>
+            <span class="total-amount grand-total">{{this.total}}</span>
+          </div>
+        </div>
+
+        <a href="/user/checkout" class="checkout-btn">Checkout</a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script>
+
+// increase/decrease quantity
+function handleQuantityChange(event,product_id) {
+  const user = '{{isLogged}}'
+  let query = ''
+  if(!user){
+    Toast(2500,'error','Please login to add product to cart')
+    return false
+  }
+  //console.log(event)
+  if(event === 'increase'){
+    query = `increase=true`
+  }else if(event === 'decrease'){
+    query = `decrease=true`
+  }else{
+    query = `quantity=${event.value}`
+  }
+
+  let data = {
+    product_id: product_id,
+    /*user_id: user._id,*/
+  }
+  
+  $.ajax({
+    type: 'POST',
+    url:  `/add-to-cart?${query}`,
+    data: data,
+    success: function(response) {
+
+      if(!response.success){
+        Toast(5000,'error',response.msg).then(() => {
+          window.location.reload()  
+        })
+        return false
+      }
+
+      const cart = response.values.cart;
+      //console.log(response)
+      if(response.success){
+        $('.cart .bubble').attr('aria-label', `${response.values.cart_count}`)
+        $('.cart .bubble').removeClass('hide')
+      }
+      if(cart && cart.length > 0){
+        $('.product-controls').each((index, element) => {
+          $(element).find('.quantity-input').val(cart[index].quantity)
+          $(element).find('.cart-product-price').html(cart[index].item_total)
+        })
+        $('.cart-product-details').each((index,element) => {
+          $(element).find('.max-quantity-info').find('b').text(cart[index].max_quantity)
+          $(element).find('.offer_val').text(cart[index].offer_value)
+          $(element).find('.offer_count').text(cart[index].offer_count)
+        })
+      }
+      $('.sub-total').html(response.values.subtotal)
+      $('.grand-total').html(response.values.total)
+      $('.total-tax').html(response.values.tax)
+      $('.discount-val').html(response.values.discounts)
+    },
+    error: function(error) {
+      console.log(error);
+    }
+  })
+}
+
+// remove item from cart
+function removeItem(index,itemId,product_id) {
+  
+  const coupons = $('#bonusCard').val()
+  const quantity = $('.products-list .cart-product-item').eq(index).find('.quantity-input').val()
+  const queries = `coupons=${coupons}&quantity=${quantity}`
+
+  $.ajax({
+    type: 'DELETE',
+    url:  `/remove-from-cart/${itemId}/${product_id}?${queries}`,
+    success: function(response) {
+      if(response.success){
+        $('.products-list .cart-product-item').eq([response.deletedIndex]).remove()
+        $('.discount-val').html(response.discounts)
+        $('.sub-total').html(response.subtotal)
+        $('.total-tax').html(response.tax)
+        $('.grand-total').html(response.total)
+        if(response.cart_count === 0){
+          window.location.reload()
+        }else{
+          $('.cart .bubble').attr('aria-label', `${response.cart_count}`)
+        }
+      }
+    },
+    error: function(error) {
+      console.log(error);
+    }
+  })
+}
+
+// coupon check handling
+
+$('.apply-btn').on('click', function(){
+
+  const coupons = $('#bonusCard').val()
+
+  $.ajax({
+    type: 'POST',
+    url:  '/apply-coupon',
+    data: {
+      coupon_codes: coupons
+    },
+    success: function(response) {
+      //console.log(response)
+      if(response.success){
+        $('.discount-val').html(response.discount)
+        $('.grand-total').html(response.total)
+      }else{
+        Toast(2000,'error',response.msg)
+      }
+    }
+  })
+})
+
+</script>

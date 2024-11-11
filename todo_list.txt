@@ -1,0 +1,14 @@
+
+#### - FRONT END
+
+category - icon
+pagination
+search filter on account
+enable buynow
+
+#### - BACK END
+
+downloads, sort
+Product detail page
+user detail page
+search filter

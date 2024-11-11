@@ -1,0 +1,389 @@
+<link rel="stylesheet" href="/user/styles/home.css">
+<link rel="stylesheet" href="/user/styles/collections.css">
+
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumbs">
+    <li class="breadcrumb-item">
+      <a href="/">Home</a>
+    </li>
+    <li class="breadcrumb-item">
+      <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/bfd80c0d91b083fd6615c46809d59a6436c7d8053b049a460c5e712a453a7f67?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="" class="breadcrumb-separator" />
+      <a href="/collections">Collections</a>
+    </li>
+    {{#if category}}
+      <li class="breadcrumb-item breadcrumb-current">
+        <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/bfd80c0d91b083fd6615c46809d59a6436c7d8053b049a460c5e712a453a7f67?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="" class="breadcrumb-separator" />
+        <span aria-current="page">{{category.category_name}}</span>
+      </li>
+    {{/if}}
+  </ol>
+</nav>
+
+<section class="content">
+  <div class="catalog-container">
+    <aside>
+      <p class="filters-label">Filters</p>
+      <div class="filters">
+        {{!-- Category Filter --}}
+        {{#if categories}}
+          <div class="filter-section">
+            <header class="filter-header">
+              <button class="filter-title-wrapper collapse-btn" data-bs-toggle="collapse" data-bs-target="#categoryCollapse" aria-expanded="false" aria-controls="collapseExample">
+                <span class="filter-title">Category</span>
+                <i class="las la-angle-down rotate"></i>
+              </button>
+            </header>
+            <div class="collapse show" id="categoryCollapse">
+              <ul class="filter-items-list card card-body border-0 m-0">
+                {{#each categories}}
+                  <li class="filter-item">
+                    <input type="checkbox"class="form-check-input m-0" value="{{this._id}}">
+                    <label for="" class="filter-item-label" aria-label="{{this.product_count}}">{{this.category_name}}<label>
+                  </li>
+                {{/each}}
+              </ul>
+            </div>
+          </div>
+        {{/if}}
+
+        {{!-- Brand Filter --}}
+        <div class="filter-section">
+          <header class="filter-header">
+            <button class="filter-title-wrapper collapse-btn" data-bs-toggle="collapse" data-bs-target="#brandCollapse" aria-expanded="false" aria-controls="collapseExample">
+              <span class="filter-title">Brand</span>
+              <i class="las la-angle-down rotate"></i>
+            </button>
+          </header>
+          <div class="collapse show" id="brandCollapse">
+            <ul class="filter-items-list card card-body border-0 m-0">
+              {{#each brands}}
+                <li class="filter-item">
+                  <input type="checkbox"class="form-check-input m-0" value="{{this.brand}}">
+                  <label for="" class="filter-item-label capitalize" aria-label="{{this.count}}">{{this.brand}}<label>
+                </li>
+              {{/each}}
+            </ul>
+          </div>
+        </div>
+
+        {{!-- Price filter --}}
+        <div class="filter-section">
+          <header class="filter-header">
+            <button class="filter-title-wrapper collapse-btn" data-bs-toggle="collapse" data-bs-target="#priceCollapse" aria-expanded="false" aria-controls="collapseExample">
+              <span class="filter-title">Price</span>
+              <i class="las la-angle-down rotate"></i>
+            </button>
+          </header>
+          <div class="collapse show" id="priceCollapse">
+            <div class="slider-container">
+              <div class="price-slider-wrapper">
+                <div id="priceSlider"></div>
+                <div class="values">
+                  <span id="minValue">0</span>
+                  <span class="from-to"></span>
+                  <span id="maxValue" class="plus">10000</span>
+                  <input type="hidden" id="sliderValues" value="0">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {{!-- Stock Filter --}}
+        <div class="filter-section">
+          <header class="filter-header">
+            <button class="filter-title-wrapper collapse-btn" data-bs-toggle="collapse" data-bs-target="#stockCollapse" aria-expanded="false" aria-controls="collapseExample">
+              <span class="filter-title">Stock</span>
+              <i class="las la-angle-down rotate"></i>
+            </button>
+          </header>
+          <div class="collapse show" id="stockCollapse">
+            <ul class="filter-items-list card card-body border-0 m-0">
+              {{#each stocks}}
+                <li class="filter-item">
+                  <input type="checkbox"class="form-check-input m-0" value="{{this.stock}}">
+                  <label for="" class="filter-item-label capitalize {{#if (eq this.stock 0)}}text-danger{{/if}}" aria-label="{{this.count}}">
+                    {{#if (eq this.stock 0)}}
+                      Out of stock
+                    {{else}}
+                      {{this.stock}}
+                    {{/if}}
+                  <label>
+                </li>
+              {{/each}}
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+    <main class="product-catalog">
+      <header class="catalog-header">
+        <div class="product-count">
+          <span class="count-label">Total Products:</span>
+          <span class="count-value">0</span>
+        </div>
+        <select name="" id="collection-sort" class="form-select">
+          <option value="">Sort by</option>
+          <option value="popularity">Popularity</option>
+          <option value="rating">Rating</option>
+          <option value="new_arrivals">New Arrivals</option>
+          <option value="price_hightolow">Price hight to low</option>
+          <option value="price_lowtohigh">Price low to high</option>
+        </select>
+      </header>
+      <div class="product-grid">
+
+        <div class="product-row"></div>
+
+        <nav class="pagination" aria-label="Pagination">
+          <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/2de423749e642867f9234165a24938928b2cdf9588d343cd6065b87c0140930f?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="Previous page" class="pagination-arrow" />
+            <div class="page-numbers">
+              <a href="#" class="page-number current-page" aria-current="page">1</a>
+              <a href="#" class="page-number">2</a>
+              <a href="#" class="page-number">3</a>
+              <span class="page-number">...</span>
+              <a href="#" class="page-number">12</a>
+            </div>
+          <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/32e251b14d565c4eb407dc8336096dd9c021e5846afae8e292102cae656ec431?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="Next page" class="pagination-arrow" />
+        </nav>
+      </div>
+    </main>
+  </div>
+</section>
+
+
+<script>
+  $('.filters').on('click','.collapse-btn', function(e){
+    $(this).find('i').toggleClass('rotate')
+  })
+
+  $('.collapse.show').click(function(e) {
+    
+    const checked = $(e.target).parent('li').find('input').prop('checked')
+    $(e.target).parent('li').find('input').prop('checked', !checked);
+
+    if(e.target.localName === 'label' || e.target.localName === 'input'){
+      e.stopPropagation()
+      const filters = createFilters()
+      sendData(filters)
+    }
+  })
+
+  $('#sliderValues').on('change',function(e) {
+    const filters = createFilters()
+    sendData(filters)
+  })
+
+  const cat = '{{category._id}}'
+
+  function createFilters(search = null){
+
+    const categories = cat ? [cat] : $('#categoryCollapse.collapse.show').find('input:checked').map(function(){
+      return $(this).val()
+    }).get()
+
+    const brands = $('#brandCollapse.collapse.show').find('input:checked').map(function(){
+      return $(this).val()
+    }).get()
+
+    const prices = $('#priceCollapse.collapse.show').find('span:not(:has(.from-to))').map(function(){
+      return $(this).text() === '10000' ? '10000000' :  $(this).text()
+    }).get().filter(item => item.trim()!== '')
+
+    const stocks = $('#stockCollapse.collapse.show').find('input:checked').map(function(){
+      return $(this).val()
+    }).get()
+
+    const sort = $('#collection-sort :selected').val()
+    const sortOrder = $('#collection-sort :selected').val() === 'price_lowtohigh' ? 'asc' : 'desc'
+
+    return {
+      categories: categories.length > 0 ? categories.join(',') : null,
+      brands: brands.length > 0 ? brands.join(',') : null,
+      prices: prices.length > 0 ? prices.join(',') : null,
+      stocks: stocks.length > 0 ? stocks.join(',') : null,
+      sort: sort.length > 0? sort : null,
+      sortOrder: sortOrder.length > 0? sortOrder : null,
+      search: search,
+    }
+  }
+
+  $('#collection-sort').change(function(){
+    const filters = createFilters()
+    sendData(filters)
+  })
+
+  if(cat) sendData(createFilters()) 
+    else sendData({})
+
+  function sendData(filters){
+    //console.log('val => ',val)
+    $.ajax({
+      type: 'POST',
+      url: '/collections/filter',
+      data: filters,
+      beforeSend: function(){
+        $('.loader-bg').addClass('flex')
+      },
+      success: function(response){
+
+        $('.loader-bg').css('display','none')
+
+        let payload = response.payload;
+        
+        if(payload.length > 0){
+          $('.product-row').html('')
+          
+          payload.forEach((product,i) => {
+          const wishlist = '{{wishlist}}'.split(',')
+          
+            $('.product-row').append(`
+            {{!-- <div class="product-card animate pop" style="--delay:${i/11}s">
+              <a class="product-header cursor-pointer" onclick="addOrRemoveWishlist('.product-row .product-card','${i}','${product._id}')">
+                <img src="/admin/images/icons/unlike.svg" alt="New badge" class="product-badge">
+              </a>
+              <div class="img-wrapper">
+                <img src="${product.images[0]}" alt="${product.product_name}">
+              </div>
+              <a href="/view-product/${product.product_slug}" class="d-flex flex-column justify-content-center">
+                <div class="product-info">
+                  <div class="product-details">
+                    <h3 class="product-name">${product.product_name}</h3>
+                    <span class="product-price price">${product.pricing.selling_price}</span>
+                  </div>
+                  <a href="#" class="product-cta">Buy Now</a>
+                </div>
+              </a>
+            </div> --}}
+            <div class="product-item-card border animate pop" style="--delay:${i/11}s">
+              <a href="/view-product/${product.product_slug}" class="card-detail-wrapper">
+                <div class="card-img-wrapper">
+                  <img src="${product.images[0]}" alt="${product.product_name}">
+                </div>
+                
+                <div class="d-flex flex-column rate-sum-wrapper">
+                  <h6 class="mb-1">${product.product_name}</h6>
+                  <div class="d-inline-flex card-rating">
+                    <div class="product-card-rate-sum d-inline-block">
+                      <div class="product-rating" style="width:${product.rating.outOfFivePercent}%">
+                      </div>
+                    </div>
+                    <span class="mb-0 ms-1 card-rating-value">${product.rating.averageRating}</span>
+                    <span class="devider"></span>
+                    <i class="las la-sms"></i>
+                    <span class="mb-0 ms-1 card-rating-value">${product.rating.totalReviews}</span>
+                  </div>
+                </div>
+              </a>
+              <div class="card-price-wrapper">
+                <div class="d-inlne-flex flex-column">
+                  <h4 class="m-0 price">${product.pricing.selling_price}</h4>
+                  <div class="d-inline-flex card-offers">
+                    <span class="original-price price">${product.pricing.original_price}</span>
+                    <span class="ms-1 off-discount">-10%</span>
+                  </div>
+                </div>
+                <div class="card-icons-wrapper">
+                  <img class="favourit-img" src="/admin/images/icons/unlike.svg"
+                    onclick="addOrRemoveWishlist('.product-row .card-icons-wrapper','${i}','${product._id}')" alt="New badge">
+                  <img src="/admin/images/icons/cart_outline.svg" alt="">
+                </div>
+              </div>
+              <div class="buy-button-wrapper">
+                <a href="#" class="buy-now-button">Buy Now</a>
+              </div>
+            </div>
+            `)
+
+            wishlist.forEach(item => {
+              if(item === product._id){
+                $('.product-row .card-icons-wrapper').eq(i).find('img.favourit-img').attr('src','/admin/images/icons/like.svg')
+                $('.product-row .card-icons-wrapper').eq(i).find('img.favourit-img').css('border-color','#ff0000')
+              }
+            })
+
+          })
+        }else{
+          $('.product-row').html(`
+            <div class="d-flex border border-warning rounded-4 justify-content-center w-100 animate" style="--delay:0.2s">
+              <span class="p-5 fw-bold text-secondary">No Products Found</span>
+            </div>
+          `)
+        }
+        $('.count-value').text(payload.length)
+
+      }
+    });
+  }
+
+  // price filter
+  $(function() {
+    const minValue = $("#minValue");
+    const maxValue = $("#maxValue");
+
+    // Initialize the slider
+    $("#priceSlider").slider({
+        range: true,
+        min: 0,
+        max: 10000,
+        values: [0, 10000],
+        slide: function(event, ui) {
+            minValue.text(ui.values[0]);
+            maxValue.text(ui.values[1]);
+            $('#sliderValues').val(ui.values[1]).trigger('change');
+            ui.values[1] < 10000 ? maxValue.removeClass('plus') : maxValue.addClass('plus');
+        }
+    });
+
+    // Set initial values
+    minValue.text($("#priceSlider").slider("values", 0));
+    maxValue.text($("#priceSlider").slider("values", 1));
+  });
+
+
+  const handleSearch = (query) => {
+    const searchQuery = query.trim().toLowerCase();
+    const filters = createFilters(searchQuery)
+    sendData(filters)
+  };
+
+  // Debounce function
+  let debounceTimer;
+  const debounce = function (callback, time) {
+      window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(() => {
+          callback(); 
+      }, time);
+  };
+
+  // Event listener for input
+  $('#search-input').on('input', function(event) {
+    const query = event.target.value;
+    debounce(() => handleSearch(query), 1000);
+    getSuggessions(searchedString)
+  });
+
+  const searchedString = new URLSearchParams(window.location.search).get('search');
+  if(searchedString && searchedString.length > 0) {
+    $('#search-input').val(searchedString);
+    debounce(() => handleSearch(searchedString), 1000);
+  }
+
+  function getSuggessions(query) {
+    $.ajax({
+      type: 'GET',
+      url: '/products/suggest',
+      data: { search: query },
+      success: function(response){
+        //console.log(response)
+        $('#search-suggestions').html('')
+        response.suggestions.forEach(item => {
+          $('#search-suggestions').append(`<option value="${item}">`);
+        });
+      }
+      
+    });
+  }
+
+</script>
