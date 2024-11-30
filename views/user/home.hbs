@@ -97,11 +97,21 @@
       {{#each (limit products 10)}}
       <div class="product-item-card">
         <a href="/view-product/{{this.product_slug}}" class="card-detail-wrapper">
+          <div class="bg-warning product-warning-badge">
+            <span class="badge">New</span>
+          </div>
           <div class="card-img-wrapper">
             <img src="{{this.images.[0]}}" alt="{{this.product_name}}">
           </div>
-          
-          <div class="d-flex flex-column rate-sum-wrapper">
+          <div class="d-flex flex-column w-100 rate-sum-wrapper">
+            <div class="d-inline-flex align-items-center justify-content-between">
+              <small class="capitalize small-muted">{{this.category.category_name}}</small>
+              <small class="capitalize small-muted {{#if this.stock}}text-success{{else}}text-danger{{/if}}">
+                {{#if this.stock}}{{this.stock}} in stock
+                {{else}}Out of stock
+                {{/if}}
+              </small>
+            </div>
             <h6 class="mb-1">{{this.product_name}}</h6>
             <div class="d-inline-flex card-rating">
               <div class="product-card-rate-sum d-inline-block">
@@ -136,9 +146,9 @@
             <img src="/admin/images/icons/cart_outline.svg" onclick="addToCart('{{this._id}}')" alt="">
           </div>
         </div>
-        <div class="buy-button-wrapper">
-          <a href="#" class="buy-now-button">Buy Now</a>
-        </div>
+        {{!-- <div class="buy-button-wrapper">
+          <a class="buy-now-button cursor-pointer" onclick="buyNow('{{this._id}}')">Buy Now</a>
+        </div> --}}
       </div>
       {{/each}}
     </div>
@@ -189,11 +199,22 @@
       {{#if this.discount}}
       <div class="product-item-card">
         <a href="/view-product/{{this.product_slug}}" class="card-detail-wrapper">
+          {{!-- <div class="bg-warning product-warning-badge">
+            <span class="badge">New</span>
+          </div> --}}
           <div class="card-img-wrapper">
             <img src="{{this.images.[0]}}" alt="{{this.product_name}}">
           </div>
           
-          <div class="d-flex flex-column rate-sum-wrapper">
+          <div class="d-flex flex-column w-100 rate-sum-wrapper">
+            <div class="d-inline-flex align-items-center justify-content-between">
+              <small class="capitalize small-muted">{{this.category.category_name}}</small>
+              <small class="capitalize small-muted {{#if this.stock}}text-success{{else}}text-danger{{/if}}">
+                {{#if this.stock}}{{this.stock}} in stock
+                {{else}}Out of stock
+                {{/if}}
+              </small>
+            </div>
             <h6 class="mb-1">{{this.product_name}}</h6>
             <div class="d-inline-flex card-rating">
               <div class="product-card-rate-sum d-inline-block">
@@ -225,12 +246,12 @@
             <img class="favourit-img" src="/admin/images/icons/{{arrayMatch ../wishlist this._id 'like' 'unlike'}}.svg" 
               style="border-color: {{arrayMatch ../wishlist this._id '#ff0000' ''}};"
               onclick="addOrRemoveWishlist('.product-row .card-icons-wrapper','{{@index}}','{{this._id}}')" alt="New badge">
-            <img src="/admin/images/icons/cart_outline.svg" alt="">
+            <img src="/admin/images/icons/cart_outline.svg" onclick="addToCart('{{this._id}}')" alt="">
           </div>
         </div>
-        <div class="buy-button-wrapper">
+        {{!-- <div class="buy-button-wrapper">
           <a href="#" class="buy-now-button">Buy Now</a>
-        </div>
+        </div> --}}
       </div>
       {{/if}}
     {{/each}}
@@ -242,5 +263,30 @@
   <img src="/admin/images/icons/Banner 2.png" alt="">
 </section>
 
+<script>
+
+  {{!-- const products = {{{json products}}}
+  
+  products.forEach((product,i) => {
+
+    const badge_wrapper = $('.product-row .product-item-card').eq(i).find('.product-warning-badge')
+    const badge = $('.product-row .product-item-card').eq(i).find('.product-warning-badge .badge')
+  
+    if(product.product_status === 'disabled' || 
+      product.category.category_status === 'disabled'){
+        $(badge_wrapper).removeClass('d-none')
+      }else{
+        $(badge_wrapper).addClass('d-none')
+      }
+    
+    if(product.product_status === 'disabled' || product.category.category_status === 'disabled'){
+      $(badge_wrapper).addClass('bg-danger-subtle')
+      $(badge).addClass('text-danger')
+      $(badge).html('Unavailable')
+    }
+    
+  }) --}}
+
+</script>
 
 

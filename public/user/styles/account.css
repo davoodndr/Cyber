@@ -854,7 +854,6 @@
 	align-self: stretch;
 	border-radius: 6px;
 	white-space: nowrap;
-	width: 100%;
 	gap: 8px;
 	padding: 8px 15px;
 	border: 1px solid #cfcfcf;
@@ -865,6 +864,13 @@
   border-color: black;
 	box-shadow: 0  5px 8px rgba(0, 0, 0, 0.1);
 }
+
+.order-button.error{
+	background-color: #fff1f1;
+  border-color: #ff002b;
+	color: #ff002b;
+}
+
 .sort-dropdown {
 	border-radius: 12px;
 	background-color: #fff;

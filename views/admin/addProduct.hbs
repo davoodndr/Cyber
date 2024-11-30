@@ -190,20 +190,20 @@
         <div class="col-4">
           <!-- Pricing -->
           <div class="card mb-4">
-            <h5 class="card-header">Pricing & Availability</h5>
+            <h5 class="card-header">Pricing &amp; Availability</h5>
             <div class="card-body">
               <div class="mb-3">
-                <label for="original-price" class="form-label">Original Price</label>
+                <label for="original-price" class="form-label">Price</label>
                 <input type="number" name="original_price" class="form-control {{#if product_info.original_price}}is-invalid{{/if}}"
                   value="{{product_values.original_price}}" id="original-price" placeholder="Enter original price">
                 {{#if product_info.original_price}}<span class="invalid-feedback">{{product_info.original_price}}</span>{{/if}}
               </div>
-              <div class="mb-3">
+              {{!-- <div class="mb-3">
                 <label for="selling-price" class="form-label">Selling Price</label>
                 <input type="number" name="selling_price" class="form-control {{#if product_info.selling_price}}is-invalid{{/if}}"
                   value="{{product_values.selling_price}}" id="selling-price" placeholder="Enter selling price">
                 {{#if product_info.selling_price}}<span class="invalid-feedback">{{product_info.selling_price}}</span>{{/if}}
-              </div>
+              </div> --}}
               <div class="mb-3">
                 <label for="stock" class="form-label">Stock</label>
                 <input type="number" name="stock" class="form-control {{#if product_info.stock}}is-invalid{{/if}}"
@@ -242,7 +242,7 @@
             </div>
           </div>
 
-          <!-- Variants Type -->
+          {{!-- <!-- Variants Type -->
           <div class="card mb-4">
             <div class="card-header d-flex align-items-center justify-content-between">
               <h5>Variants Type</h5>
@@ -271,12 +271,12 @@
                 </a> --}}
               </div>
             </div>
-          </div>
+          </div> --}}
 
         </div>
 
         <!-- Add Varaiant -->
-        <div class="col-12 mb-5">
+        {{!-- <div class="col-12 mb-5">
           <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between">
               <h5>Variants</h5>
@@ -339,7 +339,7 @@
               </table>
             </div>
           </div>
-        </div>
+        </div> --}}
 
       </div>
     </form>

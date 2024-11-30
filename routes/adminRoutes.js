@@ -26,8 +26,8 @@ router.get('/clear-session',adminController.clearSession)
 router.get('/categories',middleware.checkSession,categoryController.getCategories)
 router.post('/add-category',categoryController.addCategory)
 router.post('/update-category',categoryController.updateCategory)
-router.get('/delete-category/:id',categoryController.deleteCategory)
-router.get('/restore-category/:id',categoryController.restoreCategory)
+router.delete('/delete-category/:id',categoryController.deleteCategory)
+router.patch('/restore-category/:id',categoryController.restoreCategory)
 router.get('/category/clear-session',categoryController.clearSession)
 
 /* Products */
@@ -36,9 +36,9 @@ router.get('/add-product',middleware.checkSession,productController.addProduct)
 //router.post('/save-draft',productController.saveDraft)
 router.post('/publish-product',uploadImages,resizeImages,productController.publishProduct)
 router.get('/products/:slug/edit',middleware.checkSession,productController.editProduct)
-router.get('/products/:slug/delete',middleware.checkSession,productController.deleteProduct)
+router.delete('/products/:slug/delete',middleware.checkSession,productController.deleteProduct)
 router.post('/products/:slug/delete-image',middleware.checkSession,productController.deleteProductImage)
-router.get('/products/:slug/restore',productController.restoreProduct)
+router.patch('/products/:slug/restore',productController.restoreProduct)
 router.post('/products/:slug/update',uploadImages,resizeImages,productController.updateProduct)
 router.get('/products/clear-session/:status',productController.clearSession)
 //router.get('/login',productController.getProducts)
@@ -47,6 +47,9 @@ router.get('/products/clear-session/:status',productController.clearSession)
 router.get('/orders',middleware.checkSession,orderController.getOrders)
 router.get('/change-status/:order_id/:new_status',middleware.checkSession,orderController.changeOrderStatus)
 router.get('/orders/clear-session/:status',orderController.clearSession)
+router.get('/cancel-order/:order_id',middleware.checkSession,orderController.cancelOrder)
+router.get('/view-order',middleware.checkSession,orderController.viewOrder)
+router.get('/download-invoice',middleware.checkSession,orderController.downloadInvoice)
 
 /* Coupons */
 router.get('/coupons',middleware.checkSession,couponController.getCoupons)
@@ -72,5 +75,7 @@ router.get('/sales-report',middleware.checkSession,reportController.getReport)
 router.get('/download-report-pdf',middleware.checkSession,reportController.downloadPDF)
 router.get('/download-report-excel',middleware.checkSession,reportController.downloadEXCEL)
 
+/* Insert Data */
+//router.get('/insert-data',adminController.inserData)
 
 module.exports = router

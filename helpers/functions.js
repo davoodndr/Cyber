@@ -73,12 +73,12 @@ exports.getCartItmes = async (userId) => {
 
   return new Promise(async (resolve, reject) => {
     
-    const cart = await User.findOne({_id:userId}).populate('cart').then(cart => cart.cart)
+    //const user = await User.findOne({_id:userId});
+    const user = await User.findOne({_id:userId}).populate('cart')/* .then(user => cart.user) */
 
-    const cartItems = await Promise.all(cart.map(async (cartItem) => {
+    const cartItems = await Promise.all(user.cart.map(async (cartItem) => {
       const product = await Product.findById(cartItem.item).populate('category');
-      const coupons = await Coupon.find({coupon_status:{$nin: ['disabled','expired']}})
-      .then(coupons => coupons.filter(coupon => coupon.applied_products.includes(cartItem.item)));
+      const coupons = await Coupon.find({coupon_status:{$nin: ['disabled','expired']},coupon_code:{$nin:user.coupons}})
 
       const offers = await Offer.find(
         {
@@ -88,7 +88,7 @@ exports.getCartItmes = async (userId) => {
             {applied_categories:{$in:[product.category._id]}}
           ],
         },
-        {discount_type: 1, discount_value:1, offer_type: 1}
+        {discount_type: 1, discount_value:1, offer_type: 1,offer_code:1}
       )
       const offer_value = offers.reduce((acc, curr) => {
         if(curr.discount_type === 'fixed'){
@@ -98,13 +98,14 @@ exports.getCartItmes = async (userId) => {
         }
         return 0
       },0)
-      //console.log('offers',offers)
 
       return {
         cartItem_id: cartItem._id,
         product_id: product._id,
         name: product.product_name,
         slug: product.product_slug,
+        product_status: product.product_status,
+        category_status: product.category.category_status,
         category: product.category.category_name,
         stock: product.stock,
         price: product.pricing.original_price,
@@ -115,25 +116,27 @@ exports.getCartItmes = async (userId) => {
         thumb: product.images[0],
         coupons,
         offers,// to store on place order
-        offer_value : (offer_value * cartItem.quantity),
+        offer_amount : (offer_value * cartItem.quantity),
         offer_count: offers.length
       };
     })).catch(err => reject(err));
 
+    // discount only refers offers now
     const subtotal = cartItems.reduce((acc, curr) => acc + curr.item_total, 0).toFixed(2);
     const tax = cartItems.reduce((acc, curr) => acc + parseFloat(curr.item_tax), 0).toFixed(2);
-    const discounts = cartItems.reduce((acc, curr) => acc + parseFloat(curr.offer_value), 0).toFixed(2);
-    const offers = cartItems.map(item => item.offers).flat()
-    const total = (parseFloat(subtotal) + parseFloat(tax) - discounts).toFixed(2)
+    const offer_amount = cartItems.reduce((acc, curr) => acc + parseFloat(curr.offer_amount), 0).toFixed(2);
+    const offers = cartItems.map(item => item.offers.map(offer=>offer.offer_code)).flat()
+    const shippingCharge = cartItems.length > 0 ? 100 : 0;
+    const total = (parseFloat(subtotal) + parseFloat(tax) + shippingCharge - offer_amount).toFixed(2)
 
-    resolve({cartItems, subtotal, tax, discounts, offers, total})
+    resolve({cartItems, subtotal, tax, offer_amount, offers, total, shippingCharge})
 
   })
 
 }
 
-exports.getProductsWithOffers = async (productId) => {
-  const product = await Product.findById(productId)
+exports.getProductsWithOffers = async (productId,user = null) => {
+  const product = await Product.findById(productId).populate('category')
   const offers = await Offer.find({offer_status: 'active'})
   const offer = offers.find(offer => offer.applied_products.includes(product._id) || offer.applied_categories.includes(product.category))
   let discount = 0;
@@ -162,12 +165,20 @@ exports.getProductsWithOffers = async (productId) => {
   }
   
   const rating = await this.getRatingMesures(product._id)
+  /* const coupons = await Coupon.find({
+		coupon_status:{$nin: ['disabled','expired']},
+		applied_products:{$elemMatch:{$eq:productId}},
+	}) */
+
+  /* const updatedCoupons = user ? coupons.filter(coupon => !user.coupons.includes(coupon.coupon_code))
+    .map(coupon => coupon.coupon_code) : [] */
 
   return {
     ...product.toObject(),
     discount,
     discount_type,
-    rating
+    rating,
+    /* coupons: updatedCoupons */
   }
 }
 
@@ -202,6 +213,15 @@ exports.getRatingMesures = async (productId) => {
 
 }
 
+exports.getDateRangeOfDay = (dayNumber, year, format) => {
+  const startDate = moment().year(year).week(dayNumber).startOf('week')
+  const endDate = moment().year(year).week(dayNumber).endOf('week')
+  return {
+    start: startDate.format(format),
+    end: endDate.format(format)
+  }
+}
+
 exports.getDateRangeOfWeek = (weekNumber, year, format) => {
   const startDate = moment().year(year).week(weekNumber).startOf('week')
   const endDate = moment().year(year).week(weekNumber).endOf('week')
@@ -218,4 +238,17 @@ exports.getDateRangeOfMonth = (month, year, format) => {
     start: startDate.format(format),
     end: endDate.format(format)
   }
+}
+
+exports.checkDateOrTime = (input) => {
+  
+  if (moment(input, 'DD-MM-YYYY', true).isValid()) {
+    return 'date';
+  }
+  
+  if (moment(input, 'HH:mm:ss', true).isValid()) {
+    return 'time';
+  }
+
+  return 'invalid';
 }

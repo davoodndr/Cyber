@@ -58,8 +58,16 @@
         disableControls()
       }
     }, 1000);
+    $.ajax({
+      type: 'GET',
+      url: '/remove-timer',
+      success: function(response) {
+        console.log('timer removed')
+      }
+    })
   }
-  startTimer();
+  
+  {{start}} ? startTimer() : window.location.href = '/signup';
   
   $('.verify-button').on('click', function(){
     const otp = $('.otp-input-container > input').map((index, el) => el.value).toArray().join().replaceAll(',','')
@@ -83,7 +91,14 @@
               text: res.msg,
               icon: res.icon,
             }).then(()=>{
-              if(res.url) window.location.href = res.url
+              //if(res.url) window.location.href = res.url
+              $.ajax({
+                type: 'GET',
+                url: `/clear-session/${201}?redirect=login`,
+                success: function(res) {
+                  window.location.href = '/login'
+                }
+              })
             });
           }
       });

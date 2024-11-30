@@ -39,6 +39,24 @@ const cartSchema = new mongoose.Schema({
     default: 0,
   },
   price: Number,
+  coupons: [],
+  coupon_amount: {
+    type: Number,
+    default: 0
+  },
+  offers: [],
+  offer_amount: {
+    type: Number,
+    default: 0
+  },
+  refund_amount: {
+    type: Number,
+    default: 0,
+  },
+  isRefunded: {
+    type: Boolean,
+    default: false,
+  },
   item_total: Number,
 });
 
@@ -65,10 +83,15 @@ const orderSchema = mongoose.Schema({
     enum: ['unpaid', 'paid', 'failed'],
     default: 'unpaid',
   },
+  paid_amount: {
+    type: Number,
+    default: 0
+  },
   payment_id: String,
+  razorpay_order_id: String,
   order_status: {
     type: String,
-    enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled','return'],
+    enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled','return','payment pending'],
     default: 'pending',
   },
   order_subtotal: {
@@ -79,25 +102,38 @@ const orderSchema = mongoose.Schema({
     type: Number,
     default: 0
   },
-  coupons:[{
+  coupon:{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'coupon'
-  }],
-  offers:[{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'offer'
-  }],
+  },
+  coupon_amount: {
+    type: Number,
+    default: 0
+  },
+  offers:[],
+  offer_amount: {
+    type: Number,
+    default: 0
+  },
   discounts: {
     type: Number,
     default: 0
   },
   shipping_charge:{
     type: Number,
-    default: 0
+    default: 100
   },
   order_total: {
     type: Number,
     required: true
+  },
+  refund_amount: {
+    type: Number,
+    default: 0,
+  },
+  isRefunded: {
+    type: Boolean,
+    default: false,
   },
   cart: [cartSchema],
   billing_address: orderAddressSchema,

@@ -106,16 +106,5 @@
   margin-right: 5px;
 }
 
-.alert-button {
-  display: inline-block;
-  color: black;
-  border: 1px solid #a5a5a5;
-  border-radius: 10px;
-  background: white;
-}
 
-.alert-dialog{
-  display: grid;
-  border-radius: 30px;
-  padding-bottom: 30px;
-}
+

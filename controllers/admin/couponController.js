@@ -18,7 +18,7 @@ exports.getCoupons = async (req,res) => {
   const count = await Coupon.countDocuments();
   const totalPages = Math.ceil(count / limit);
   
-
+  
   return res.render('admin/coupons',{
     pageName: 'coupons',
     coupons,
@@ -58,6 +58,16 @@ exports.addCoupon = async (req,res) => {
     req.session.coupon_values = null
   }
 
+  let {discount_value,max_redeemable,min_cart_value} = req.body
+
+  const discountValues = {discount_value,max_redeemable,min_cart_value}
+  Object.entries(discountValues).filter(obj => parseFloat(obj[1]) <=0)
+    .map(obj => {
+      let key = obj[0].replaceAll('_'," ")
+      pInfo[obj[0]] = `${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()} cannot invalid`
+      return pInfo
+    })
+
   //return validation messages on blank
   if(Object.keys(pInfo).length){
     pInfo.status = 400;
@@ -70,6 +80,14 @@ exports.addCoupon = async (req,res) => {
   req.body.start_date = moment(req.body.start_date,"DD-MM-YYYY").utc()
   req.body.end_date = moment(req.body.end_date,"DD-MM-YYYY").utc()
 
+  discount_value = parseFloat(discount_value)
+  max_redeemable = parseFloat(max_redeemable)
+
+  if(max_redeemable > 100){
+    req.session.coupon_info = {status:400,max_redeemable:'Max. redeemable can\'t exceed discount value'}
+    return res.send({success:false})
+  }
+
   const coupon = new Coupon(req.body)
   const exist = await Coupon.findOne({coupon_code:coupon.coupon_code})
   if(exist) {
@@ -78,6 +96,16 @@ exports.addCoupon = async (req,res) => {
     req.session.coupon_info = pInfo
     return res.send({success:false})
   }
+
+  if(discount_value > 5){
+    pInfo.status = 400
+    pInfo.discount_value = 'Discount can\'t exceed 5%'
+    req.session.coupon_info = pInfo
+    return res.send({success:false})
+  }
+
+  coupon.max_redeemable = discount_value * max_redeemable / 100
+  coupon.discount_type = 'percentage'
 
   await coupon.save().then(() => {
     req.session.coupon_info = fn.createToast(true,'success','Coupon added successfully')
@@ -116,9 +144,19 @@ exports.updateCoupon = async (req,res) => {
     req.session.coupon_values = null
   }
 
+  let {discount_value,max_redeemable,min_cart_value} = req.body
+
+  const discountValues = {discount_value,max_redeemable,min_cart_value}
+  Object.entries(discountValues).filter(obj => parseFloat(obj[1]) <=0)
+    .map(obj => {
+      let key = obj[0].replaceAll('_'," ")
+      pInfo[obj[0]] = `${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()} cannot invalid`
+      return pInfo
+    })
+
   //return validation messages on blank
   if(Object.keys(pInfo).length){
-    pInfo.status = 400;
+    pInfo.status = 401;
     req.session.coupon_info = pInfo
     return res.send({success:false})
   }
@@ -128,7 +166,25 @@ exports.updateCoupon = async (req,res) => {
   req.body.start_date = moment(req.body.start_date,"DD-MM-YYYY").utc()
   req.body.end_date = moment(req.body.end_date,"DD-MM-YYYY").utc()
 
-  console.log(req.body)
+  discount_value = parseFloat(discount_value)
+  max_redeemable = parseFloat(max_redeemable)
+
+  if(max_redeemable > 100){
+    req.session.coupon_info = {status:401,max_redeemable:'Max. redeemable can\'t exceed discount value'}
+    return res.send({success:false})
+  }
+
+  const coupon = await Coupon.findById(coupon_id)
+
+  if(discount_value > 5){
+    pInfo.status = 401
+    pInfo.discount_value = 'Discount can\'t exceed 5%'
+    req.session.coupon_info = pInfo
+    return res.send({success:false})
+  }
+
+  req.body.max_redeemable = max_redeemable > 10 ? discount_value * max_redeemable / 100 : max_redeemable
+  req.body.start_date = coupon.start_date
 
   await Coupon.findByIdAndUpdate(coupon_id,{
     $set:req.body

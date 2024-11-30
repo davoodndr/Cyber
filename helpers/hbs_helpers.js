@@ -13,6 +13,9 @@ module.exports = {
   eq: function (a, b) {
     return a === b;
   },
+  neq: function(a,b){
+    return a !== b;
+  },
   gt: function (a, b) {
     return a > b;
   },
@@ -26,7 +29,7 @@ module.exports = {
     return JSON.stringify(context)
   },
   length: function(array){
-    return array.length
+    return array ? array.length : 0
   },
   remember: function(previous, original){
     return previous ? previous : original;
@@ -49,7 +52,25 @@ module.exports = {
     return Array.from({ length }, (_, i) => i + 1);
   },
   or: function (...conditions) {
-    return conditions.some(Boolean);
+    const options = conditions.pop();
+
+    for (let arg of conditions) {
+      if (arg) {
+        return true;
+      }
+    }
+    return false;
+  },
+  and: function(...conditions){
+    //return conditions.every(Boolean);
+    const options = conditions.pop();
+
+    for (let arg of conditions) {
+      if (!arg) {
+        return false;
+      }
+    }
+    return true;
   },
   arrayMatch: function(array, search, value1, value2){
     //console.log('arr -',array, 'search - ', search,value1,value2)
@@ -62,6 +83,26 @@ module.exports = {
   },
   json2query: function(json){
     return new URLSearchParams(json).toString()
+  },
+  isArray: function(input){
+    return Array.isArray(input)
+  },
+  keyValue: function(object,returns, defaultVal){
+    if(object && Object.entries(object).flat().length > 0){
+      return returns === 'key' ? Object.keys(object)[0] : Object.values(object)[0]
+    }else{
+      return defaultVal
+    }
+  },
+  isEmptyObject: function(value, options) {
+    if (value && typeof value === 'object' && Object.keys(value).length === 0) {
+      return options.fn(this);
+    } else {
+      return options.inverse(this);
+    }
+  },
+  log: function(input){
+    console.log(input)
   }
   
 }

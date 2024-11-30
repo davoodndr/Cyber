@@ -1,6 +1,37 @@
 <link rel="stylesheet" href="/user/styles/home.css">
 <link rel="stylesheet" href="/user/styles/collections.css">
 
+<style>
+  .pagination {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .pagination button {
+    padding: 5px 10px;
+    margin: 0 5px;
+    cursor: pointer;
+    outline: 1px solid #494a4f;
+    border-radius: 1px;
+    border: none;
+  }
+
+  .hidden {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .pagination button.active {
+    background-color: #007bff;
+    color: white;
+  }
+</style>
+
 <nav aria-label="Breadcrumb">
   <ol class="breadcrumbs">
     <li class="breadcrumb-item">
@@ -136,8 +167,8 @@
 
         <div class="product-row"></div>
 
-        <nav class="pagination" aria-label="Pagination">
-          <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/2de423749e642867f9234165a24938928b2cdf9588d343cd6065b87c0140930f?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="Previous page" class="pagination-arrow" />
+        {{!-- <nav class="pagination" aria-label="Pagination">
+          <img id="prevPage" src="https://cdn.builder.io/api/v1/image/assets/TEMP/2de423749e642867f9234165a24938928b2cdf9588d343cd6065b87c0140930f?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="Previous page" class="pagination-arrow" />
             <div class="page-numbers">
               <a href="#" class="page-number current-page" aria-current="page">1</a>
               <a href="#" class="page-number">2</a>
@@ -145,8 +176,8 @@
               <span class="page-number">...</span>
               <a href="#" class="page-number">12</a>
             </div>
-          <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/32e251b14d565c4eb407dc8336096dd9c021e5846afae8e292102cae656ec431?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="Next page" class="pagination-arrow" />
-        </nav>
+          <img id="nextPage" src="https://cdn.builder.io/api/v1/image/assets/TEMP/32e251b14d565c4eb407dc8336096dd9c021e5846afae8e292102cae656ec431?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="Next page" class="pagination-arrow" />
+        </nav> --}}
       </div>
     </main>
   </div>
@@ -218,7 +249,7 @@
     else sendData({})
 
   function sendData(filters){
-    //console.log('val => ',val)
+    
     $.ajax({
       type: 'POST',
       url: '/collections/filter',
@@ -236,33 +267,25 @@
           $('.product-row').html('')
           
           payload.forEach((product,i) => {
-          const wishlist = '{{wishlist}}'.split(',')
+            const wishlist = '{{wishlist}}'.split(',')
           
             $('.product-row').append(`
-            {{!-- <div class="product-card animate pop" style="--delay:${i/11}s">
-              <a class="product-header cursor-pointer" onclick="addOrRemoveWishlist('.product-row .product-card','${i}','${product._id}')">
-                <img src="/admin/images/icons/unlike.svg" alt="New badge" class="product-badge">
-              </a>
-              <div class="img-wrapper">
-                <img src="${product.images[0]}" alt="${product.product_name}">
-              </div>
-              <a href="/view-product/${product.product_slug}" class="d-flex flex-column justify-content-center">
-                <div class="product-info">
-                  <div class="product-details">
-                    <h3 class="product-name">${product.product_name}</h3>
-                    <span class="product-price price">${product.pricing.selling_price}</span>
-                  </div>
-                  <a href="#" class="product-cta">Buy Now</a>
-                </div>
-              </a>
-            </div> --}}
             <div class="product-item-card border animate pop" style="--delay:${i/11}s">
+              <div class="bg-warning product-warning-badge">
+                <span class="badge">New</span>
+              </div>
               <a href="/view-product/${product.product_slug}" class="card-detail-wrapper">
                 <div class="card-img-wrapper">
                   <img src="${product.images[0]}" alt="${product.product_name}">
                 </div>
                 
-                <div class="d-flex flex-column rate-sum-wrapper">
+                <div class="d-flex flex-column w-100 rate-sum-wrapper">
+                  <div class="d-inline-flex align-items-center justify-content-between">
+                    <small class="capitalize small-muted">${product.category.category_name}</small>
+                    <small class="capitalize small-muted">
+                      
+                    </small>
+                  </div>
                   <h6 class="mb-1">${product.product_name}</h6>
                   <div class="d-inline-flex card-rating">
                     <div class="product-card-rate-sum d-inline-block">
@@ -278,23 +301,51 @@
               </a>
               <div class="card-price-wrapper">
                 <div class="d-inlne-flex flex-column">
-                  <h4 class="m-0 price">${product.pricing.selling_price}</h4>
-                  <div class="d-inline-flex card-offers">
-                    <span class="original-price price">${product.pricing.original_price}</span>
-                    <span class="ms-1 off-discount">-10%</span>
-                  </div>
+                  <h4 class="m-0 price" style="line-height:1 !important">
+                    ${product.discount ? product.pricing.selling_price : product.pricing.original_price}
+                  </h4>
+                  ${product.discount ?
+                  `<div class="d-inline-flex card-offers">
+                    <span class="original-price price"  style="line-height:1 !important">${product.pricing.original_price}</span>
+                    <span class="ms-1 off-discount">-<span class="${product.discount_type === 'fixed' ? 'price' : 'percentage'}">${product.discount}</span></span>
+                  </div>` : ''
+                  }
                 </div>
                 <div class="card-icons-wrapper">
-                  <img class="favourit-img" src="/admin/images/icons/unlike.svg"
+                  <img class="favourit-img" src="/admin/images/icons/{{arrayMatch ../wishlist this._id 'like' 'unlike'}}.svg"
                     onclick="addOrRemoveWishlist('.product-row .card-icons-wrapper','${i}','${product._id}')" alt="New badge">
-                  <img src="/admin/images/icons/cart_outline.svg" alt="">
+                  <img src="/admin/images/icons/cart_outline.svg" onclick="addToCart('${product._id}')" alt="">
                 </div>
               </div>
-              <div class="buy-button-wrapper">
+              {{!-- <div class="buy-button-wrapper">
                 <a href="#" class="buy-now-button">Buy Now</a>
-              </div>
+              </div> --}}
             </div>
             `)
+            
+            if(product.stock){
+              $('.product-row .product-item-card .rate-sum-wrapper').eq(i).find('small:last-child').addClass('text-success')
+              $('.product-row .product-item-card .rate-sum-wrapper').eq(i).find('small:last-child').text(`${product.stock} in stock`)
+            }else{
+              $('.product-row .product-item-card .rate-sum-wrapper').eq(i).find('small:last-child').addClass('text-danger')
+              $('.product-row .product-item-card .rate-sum-wrapper').eq(i).find('small:last-child').text(`Out of stock`)
+            }
+
+            const badge_wrapper = $('.product-row .product-item-card').eq(i).find('.product-warning-badge')
+            const badge = $('.product-row .product-item-card').eq(i).find('.product-warning-badge .badge')
+
+            if(product.product_status === 'disabled' || 
+              product.category.category_status === 'disabled' {{!-- ||
+              product.coupons.length > 0 --}}){
+                $(badge_wrapper).removeClass('d-none')
+              }else{
+                $(badge_wrapper).addClass('d-none')
+              }
+            if(product.product_status === 'disabled' || product.category.category_status === 'disabled'){
+              $(badge_wrapper).addClass('bg-danger-subtle')
+              $(badge).addClass('text-danger')
+              $(badge).html('Unavailable')
+            }
 
             wishlist.forEach(item => {
               if(item === product._id){
@@ -376,7 +427,6 @@
       url: '/products/suggest',
       data: { search: query },
       success: function(response){
-        //console.log(response)
         $('#search-suggestions').html('')
         response.suggestions.forEach(item => {
           $('#search-suggestions').append(`<option value="${item}">`);
@@ -385,5 +435,66 @@
       
     });
   }
+
+
+  // pagination
+  document.addEventListener('DOMContentLoaded', function () {
+
+    const content = document.querySelector('.product-row'); 
+    const paginationWrapper = document.querySelector('.product-grid')
+    const itemsPerPage = 8;
+    let currentPage = 0;
+    const items = Array.from(content.querySelectorAll('.product-item-card')).slice(0);
+
+    function showPage(page) {
+      const startIndex = page * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      items.forEach((item, index) => {
+        item.classList.toggle('hidden', index < startIndex || index >= endIndex);
+      });
+      updateActiveButtonStates();
+    }
+
+    function createPageButtons() {
+      const totalPages = Math.ceil(items.length / itemsPerPage);
+      const paginationContainer = document.createElement('div');
+      const paginationDiv = document.body.appendChild(paginationContainer);
+      paginationContainer.classList.add('pagination');
+      const pageNunbers = document.createElement('div')
+      pageNunbers.classList.add('page-numbers')
+      paginationContainer.appendChild(pageNunbers)
+
+      for (let i = 0; i < totalPages; i++) {
+        const pageButton = document.createElement('a');
+        pageButton.classList.add('page-number');
+        pageButton.classList.add('cursor-pointer')
+        pageButton.classList.add('border')
+        pageButton.textContent = i + 1;
+        pageButton.addEventListener('click', () => {
+          currentPage = i;
+          showPage(currentPage);
+          updateActiveButtonStates();
+        });
+        paginationWrapper.appendChild(paginationContainer);
+        pageNunbers.appendChild(pageButton);
+      }
+    }
+
+    function updateActiveButtonStates() {
+      const pageButtons = document.querySelectorAll('.pagination a');
+      pageButtons.forEach((button, index) => {
+        if (index === currentPage) {
+          button.classList.add('current-page');
+        } else {
+          button.classList.remove('current-page');
+        }
+      });
+    }
+
+    createPageButtons();
+    showPage(currentPage);
+
+  })
+
 
 </script>

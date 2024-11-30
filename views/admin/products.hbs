@@ -61,7 +61,7 @@
           <th style="--w:300px">Product</th>
           <th style="--w:150px">stock</th>
           <th style="--w:150px">price</th>
-          <th style="--w:150px">Variants</th>
+          {{!-- <th style="--w:150px">Variants</th> --}}
           <th style="--w:150px">Status</th>
           <th style="--w:150px">Actions</th>
         </tr>
@@ -84,11 +84,11 @@
             <td style="--w:150px">{{this.stock}}</td>
             <td style="--w:150px">
               <div class="name-box">
-                <p class="m-0 p-name">₹ {{this.pricing.selling_price}}</p>
-                <p class="m-0 p-category text-decoration-line-through">₹ {{this.pricing.original_price}}</p>
+                {{#if this.pricing.selling_price}}<p class="m-0 p-name">₹{{this.pricing.selling_price}}</p>{{/if}}
+                <p class="m-0 {{#if this.pricing.selling_price}}p-category text-decoration-line-through{{else}}p-name{{/if}}">₹{{this.pricing.original_price}}</p>
               </div>  
             </td>
-            <td style="--w:150px">{{length this.variants}}</td>
+            {{!-- <td style="--w:150px">{{length this.variants}}</td> --}}
             <td style="--w:150px">
               <div class="status 
                 {{#if (eq product_status 'active')}} green
@@ -112,7 +112,7 @@
                     <i class="las la-edit"></i>
                   </a>
                 {{/if}}
-                <form id="delete-form" action="/admin/products/{{this.product_slug}}/delete" method="get"></form>
+                {{!-- <form id="delete-form" action="/admin/products/{{this.product_slug}}/delete" method="get"></form> --}}
                 <div class="action-btn">
                   <svg width="4" height="17" viewBox="0 0 4 17" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2 16.98C1.45 16.98 0.979167 16.7841 0.5875 16.3925C0.195833 16.0008 0 15.53 0 14.98C0 14.43 0.195833 13.9591 0.5875 13.5675C0.979167 13.1758 1.45 12.98 2 12.98C2.55 12.98 3.02083 13.1758 3.4125 13.5675C3.80417 13.9591 4 14.43 4 14.98C4 15.53 3.80417 16.0008 3.4125 16.3925C3.02083 16.7841 2.55 16.98 2 16.98ZM2 10.98C1.45 10.98 0.979167 10.7841 0.5875 10.3925C0.195833 10.0008 0 9.52998 0 8.97998C0 8.42998 0.195833 7.95915 0.5875 7.56748C0.979167 7.17581 1.45 6.97998 2 6.97998C2.55 6.97998 3.02083 7.17581 3.4125 7.56748C3.80417 7.95915 4 8.42998 4 8.97998C4 9.52998 3.80417 10.0008 3.4125 10.3925C3.02083 10.7841 2.55 10.98 2 10.98ZM2 4.97998C1.45 4.97998 0.979167 4.78415 0.5875 4.39248C0.195833 4.00081 0 3.52998 0 2.97998C0 2.42998 0.195833 1.95915 0.5875 1.56748C0.979167 1.17581 1.45 0.97998 2 0.97998C2.55 0.97998 3.02083 1.17581 3.4125 1.56748C3.80417 1.95915 4 2.42998 4 2.97998C4 3.52998 3.80417 4.00081 3.4125 4.39248C3.02083 4.78415 2.55 4.97998 2 4.97998Z" fill="currentColor"/>
@@ -120,14 +120,14 @@
                   <ul class="popup-menu">
                     {{#if this.is_deleted}}
                       <li>
-                        <a href="/admin/products/{{this.product_slug}}/restore">
+                        <a onclick="restoreProduct('{{this.product_slug}}')">
                           <i class="las la-redo-alt"></i>
                           <span>Restore</span>
                         </a>
                       </li>
                     {{else}}
                       <li>
-                        <a onclick="deleteProduct('{{this._id}}')">
+                        <a onclick="deleteProduct('{{this.product_slug}}')">
                           <i class="lar la-trash-alt"></i>
                           <span>Delete</span>
                         </a>
@@ -185,7 +185,7 @@
     });
   }
 
-  function deleteProduct(id){
+  function deleteProduct(slug){
     Swal.fire({
       title: "Are you sure?",
       text: "This product won't availble for public!",
@@ -196,7 +196,39 @@
       confirmButtonText: "Yes, delete it!"
     }).then((result) => {
       if (result.isConfirmed) {
-        $('#delete-form').submit()
+        $.ajax({
+          type: 'DELETE',
+          url: `/admin/products/${slug}/delete`,
+          success: function(response){
+            if(response.success){
+              window.location.reload()
+            }
+          }
+        })
+      }
+    });
+  }
+
+  function restoreProduct(slug){
+    Swal.fire({
+      title: "Are you sure?",
+      text: "This will availble for public!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, restore it!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          type: 'PATCH',
+          url: `/admin/products/${slug}/restore`,
+          success: function(response){
+            if(response.success){
+              window.location.reload()
+            }
+          }
+        })
       }
     });
   }

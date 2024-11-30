@@ -16,13 +16,18 @@ const moment = require('moment');
 
 exports.getHome = async (req, res) => {
 
-  req.session.user = await User.findById('6711c46d731d478ccdad43f6');
+  req.session.user = await User.findById('6711c46d731d478ccdad43f6'/* '6712192a397dcef4eb7ea766' */);
   const user = req.session.user;
   constants.isLogged = user ? true : false;
 
+  /* Setup coupon validity */
+  const now = moment(new Date().toLocaleString(),"DD-MM-YYYY").utc().toDate();
+  await Coupon.updateMany({end_date: {$lt: now}},{coupon_status:'expired'})
+  await Offer.updateMany({end_date: {$lt: now}},{offer_status:'expired'})
+
   const products = await Product.find().limit(10).sort({createdAt: -1})
   const produtsWithOffer = await Promise.all(products.map(async product => {
-    return await fn.getProductsWithOffers(product._id)
+    return await fn.getProductsWithOffers(product._id,user)
   }))
   const productIds = products.map(item => item._id.toString())
   //reset maxquantity for cart
@@ -36,11 +41,9 @@ exports.getHome = async (req, res) => {
     //}
   })
 
-
-  /* Setup coupon validity */
-  const now = moment(new Date().toLocaleString(),"DD-MM-YYYY").utc().toDate();
-  await Coupon.updateMany({end_date: {$lt: now}},{coupon_status:'expired'})
-  await Offer.updateMany({end_date: {$lt: now}},{offer_status:'expired'})
+  await Product.updateMany({},{
+    $set: {'pricing.selling_price':0}
+  })
 
   res.render('user/home',{
     products: produtsWithOffer,
@@ -123,6 +126,7 @@ exports.doSignup = async (req, res) => {
   await sendOTPEmail(username, email, otp).then(() => {
     console.log('mail send', `${otp}`)
     req.session.user_data = {name: username, email: email, pass: password, otp: otp, exprire: otpExpiration}
+    req.session.start = true // for disabling reset timer on page reload
     return res.redirect('/get-verify-otp')
   }).catch(err => {
     console.log(err)
@@ -130,7 +134,7 @@ exports.doSignup = async (req, res) => {
 
 }
 
-exports.transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   port: 587, //default port for gmail
   secure: false,
@@ -142,12 +146,12 @@ exports.transporter = nodemailer.createTransport({
 });
 
 // Generate OTP
-exports.generateOTP = () => {
+const generateOTP = () => {
   return crypto.randomInt(100000, 999999).toString(); // 6-digit OTP
 };
 
 // Send OTP Email
-exports.sendOTPEmail = async (name, email, otp) => {
+const sendOTPEmail = async (name, email, otp) => {
   const mailOptions = {
       from: process.env.MAILER_EMAIL,
       to: email,
@@ -162,13 +166,21 @@ exports.sendOTPEmail = async (name, email, otp) => {
 };
 
 exports.getVerify = (req, res) => {
-  return res.render('user/signup_otp')
+  return res.render('user/signup_otp',{
+    start: req.session.start
+  })
+}
+
+exports.removeTimer = (req,res) => {
+  req.session.start = false;
+  return res.send({success:true})
 }
 
 exports.verifyOTP = async (req, res) => {
   
   const {otp} = req.body;
   const {user_data} = req.session
+
   console.log(user_data.email,`${otp} : ${user_data.otp}`)
   if (user_data.otp !== otp) {
     return res.send(fn.sendResponse(400,'Error!','error','Invalid OTP. Please Try again'))
@@ -190,7 +202,7 @@ exports.verifyOTP = async (req, res) => {
   await newUser.save()
   .then(() => {
     const info = fn.sendResponse(201,'Success!','success','Account created Successfully!')
-    info.url = `/clear-session/${201}?redirect=login`
+    info.url = `/clear-session/${201}?redirect=/login`
     return res.send(info)
   })
   .catch((error) =>{
@@ -218,6 +230,83 @@ exports.resendOTP = async (req,res) => {
     return res.send(fn.sendResponse(500,'Error!','error','Internal Server Error'))
   });
 
+}
+
+exports.getForgotPassword = (req, res) => {
+  res.render('user/forgot_password')
+}
+
+exports.sendForgotOtp = async (req,res) => {
+  const {email} = req.body;
+
+  if(!email) {
+    return res.send(fn.sendResponse(400,'Error!','error','Please enter an email to send code.'))
+  }
+
+  const user = await User.findOne({email: email})
+
+  if(!user){
+    return res.send(fn.sendResponse(400,'Error!','error','User not found'))
+  }
+
+  const name = user.username
+
+  const otp = generateOTP()
+  const otpExpiration = Date.now() + 1 * 80 * 1000;
+
+  await sendOTPEmail(name, email, otp).then(() => {
+    console.log('mail send', `${otp}`)
+    req.session.user_data = {email: email, otp: otp, exprire: otpExpiration}
+    return res.send(fn.sendResponse(200,'Success!','success','OTP sent Successfully'))
+  }).catch(err => {
+    console.log(err)
+    return res.send(fn.sendResponse(500,'Error!','error','Internal Server Error'))
+  });
+}
+
+exports.verifyForgotOTP = (req, res) => {
+  const {otp} = req.query;
+  const {user_data} = req.session
+
+  if (user_data.otp !== otp) {
+    return res.send(fn.sendResponse(400,'Error!','error','Invalid OTP. Please Try again'))
+  }
+
+  if (user_data.otpExpiration < Date.now()) {
+    return res.send(fn.sendResponse(400,'Error!','error','OTP expired. Please request a new one.'))
+  }
+
+  return res.send({success:true,link:'/reset-password'})
+}
+
+exports.resetPassword = async (req, res) => {
+  const {password, confirm} = req.body
+  const {user_data} = req.session
+  
+  if(password !== confirm){
+    return res.send(fn.sendResponse(400, 'Error!', 'error', 'Passwords does not match'))
+  }
+
+  const pass = fn.validatePassword(password)
+  
+  if(typeof pass === 'string'){
+    return res.send(fn.sendResponse(400, 'Error!', 'error', pass))
+  }else if(typeof pass === 'boolean' && pass === false){
+    return res.send(fn.sendResponse(400, 'Error!', 'error', 'Password not correct'))
+  }
+
+  const hashedPass = await bcrypt.hash(password,10)
+  await User.findOneAndUpdate({email:user_data.email},{
+    $set: {password: hashedPass}
+  }).then(()=>{
+    res.send(fn.sendResponse(200, 'Success!', 'success', 'Password updated successfully'))
+  }).catch(err => {
+    console.log(err)
+  })
+}
+
+exports.getResetPassword = (req, res) => {
+  res.render('user/reset_password')
 }
 
 /* Login Section */
@@ -313,9 +402,14 @@ exports.googleLogin = async (req,res) =>{
 exports.viewAccount = async (req, res) =>{
   
   const user_id = req.session.user._id;
-  const user = await User.findOne({_id: user_id}).populate('address_list')
+  let user = await User.findOne({_id: user_id}).populate('address_list')
   const address = await Address.findOne({_id:user.default_address})
-  const transactions = await Transaction.find({user_id}).sort({createdAt: -1})
+  const transactionsData = await Transaction.find({user_id}).sort({createdAt: -1})
+  const transactions = transactionsData.map(item => {
+    item.transaction_amount = item.transaction_amount.toFixed(2),
+    item.current_balance = item.current_balance.toFixed(2)
+    return item
+  })
   const wishlist = await User.findById(req.session.user._id).populate('wishlist.product').then(user => user.wishlist)
   const productsWithOffer = await Promise.all(wishlist.map(async item => {
     const newItem = {
@@ -332,20 +426,20 @@ exports.viewAccount = async (req, res) =>{
             .populate('shipping_address')
             .sort({createdAt: -1})
   // Process each order to get order items
-  const orders = await Promise.all(ordersList.map(async (order) => {
+  const orders = await Promise.all(ordersList.map(async(order) => {
+    
     const orderItems = await Promise.all(order.cart.map(async (item) => {
-      //console.log('item in user',order)
-        const product = await Product.findById(item.product_id);
-        return {
-          item_id: item._id,
-          item_status: item.item_status,
-          product_id: product._id,
-          product_name: product.product_name,
-          thumb: product.images[0],
-          quantity: item.quantity,
-          price: item.price,
-          item_total: item.item_total,
-        };
+      const product = await Product.findById(item.product_id);
+      return {
+        item_id: item._id,
+        item_status: item.item_status,
+        product_id: product._id,
+        product_name: product.product_name,
+        thumb: product.images[0],
+        quantity: item.quantity,
+        price: item.price,
+        item_total: item.item_total,
+      };
     }));
     //console.log(orderItems)
     return {
@@ -353,6 +447,8 @@ exports.viewAccount = async (req, res) =>{
         orderItems,
     };
   }));
+
+  user.wallet = user.wallet.toFixed(2)
 
   //console.log(orders[0])
   return res.render('user/account',{
@@ -638,7 +734,7 @@ exports.changePassword = async (req, res) => {
   }
 
   const pass = fn.validatePassword(password)
-  console.log(pass)
+  //console.log(pass)
   if(typeof pass === 'string'){
     req.session.acc_info = fn.sendResponse('password_error', 'Error!', 'error', pass)
     return res.redirect('/user/account')
@@ -712,10 +808,10 @@ exports.logout = (req, res) => {
 },
 
 exports.clearSession = (req, res) => {
-
+  //console.log(req.params)
   const {status} = req.params
   const {redirect, destroy} = req.query
-  console.log(status, redirect, destroy)
+  //console.log(status, redirect, destroy)
   if(status == 201){
     req.session.signup_info = null
     req.session.signup_values = null
@@ -727,17 +823,15 @@ exports.clearSession = (req, res) => {
     //return res.redirect(`${redirect}`)
     return res.send({status: 201})
   }else{
-    console.log(destroy)
     if(destroy){
       req.session.signup_info = null
       req.session.login_info = null
       req.session.acc_info = null
-      res.redirect('/user/account')
+      //res.redirect('/user/account')
     }
-    if(redirect) return res.send({redirct:true})
+    if(redirect && redirect.length) return res.send({redirect:true})
   }
 }
-
 
 const mailTemplate = (name, otp) => {
   name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()

@@ -72,12 +72,12 @@
             <td><input class="form-check-input" type="checkbox"></td>
             <td style="--w:200px" class="d-flex flex-column">
               <p class="m-0">{{this.coupon_code}}</p>
-              <p class="m-0 text-black-50" style="font-size: 12px;">
+              {{!-- <p class="m-0 text-black-50" style="font-size: 12px;">
                 {{#if (gt (length this.applied_products) 0)}}On
                 {{length this.applied_products}} products
                 {{else}}Not applied
                 {{/if}}
-              </p>
+              </p> --}}
             </td>
             <td style="--w:150px">
               <span class="{{#if (eq discount_type 'percentage')}}percentage{{else}}price{{/if}}">{{discount_value}}</span>
@@ -191,11 +191,7 @@
                   <label for="review-title">Discount value<span class="text-danger fs-6">*</span></label>
                   <div class="input-group">
                     <input type="number" class="form-control {{#if coupon_info.discount_value}}is-invalid{{/if}}" style="width: 30%;" 
-                      value="{{coupon_values.discount_value}}" name="discount_value" placeholder="Enter discount value">
-                    <select name="discount_type" id="" class="form-select w-custom dropdown-toggle" data-bs-toggle="dropdown"  aria-expanded="false">
-                      <option value="fixed">Fixed Amount</option>
-                      <option value="percentage">Percentage</option>
-                    </select>
+                      value="{{coupon_values.discount_value}}" name="discount_value" placeholder="Max up to 5%">
                     {{#if coupon_info.discount_value}}<span class="invalid-feedback">{{coupon_info.discount_value}}</span>{{/if}}
                   </div>
                 </div>
@@ -233,13 +229,18 @@
                     value="{{coupon_values.min_cart_value}}" placeholder="Enter min. cart value">
                   {{#if coupon_info.min_cart_value}}<span class="invalid-feedback">{{coupon_info.min_cart_value}}</span>{{/if}}
                 </div>
+              </div>
+
+              <div class="col-md-6">
                 <div class="form-group mb-2">
-                  <label for="review-title">Max Redeemable<span class="text-danger fs-6">*</span></label>
+                  <label for="review-title">Max Redeemable (percentage)<span class="text-danger fs-6">*</span></label>
                   <input type="text" class="form-control {{#if coupon_info.max_redeemable}}is-invalid{{/if}}" 
                     value="{{coupon_values.max_redeemable}}"name="max_redeemable" value="{{coupon_values.landmark}}" 
-                  placeholder="Enter maximum redeemable value">
+                  placeholder="Max up to 100%">
                   {{#if coupon_info.max_redeemable}}<span class="invalid-feedback">{{coupon_info.max_redeemable}}</span>{{/if}}
                 </div>
+              </div>
+              <div class="col-md-12">
                 <div class="form-group mb-2">
                   <label for="review-title">Description<span class="text-danger fs-6">*</span></label>
                   <input type="text" class="form-control {{#if coupon_info.description}}is-invalid{{/if}}" name="description" 
@@ -247,19 +248,6 @@
                   {{#if coupon_info.description}}<span class="invalid-feedback">{{coupon_info.description}}</span>{{/if}}
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="form-group mb-2">
-                  <label for="review-title">Available Products<span class="text-danger fs-6">*</span></label>
-                  <select class="select-applicable-products form-select {{#if coupon_info.applied_products}}is-invalid{{/if}}"
-                     name="applied_products[]" multiple="multiple">
-                    {{#each products}}
-                    <option value="{{this._id}}">{{this.product_name}}</option>
-                    {{/each}}
-                  </select>
-                  {{#if coupon_info.applied_products}}<span class="invalid-feedback">{{coupon_info.applied_products}}</span>{{/if}}
-                </div>
-              </div>
-              
             </form>
           </div>
 
@@ -295,10 +283,6 @@
                   <div class="input-group">
                     <input type="number" class="form-control {{#if coupon_info.discount_value}}is-invalid{{/if}}" style="width: 30%;" 
                       value="{{coupon_values.discount_value}}" name="discount_value" placeholder="Enter discount value">
-                    <select name="discount_type" id="" class="form-select w-custom dropdown-toggle" data-bs-toggle="dropdown"  aria-expanded="false">
-                      <option value="fixed">Fixed Amount</option>
-                      <option value="percentage">Percentage</option>
-                    </select>
                     {{#if coupon_info.discount_value}}<span class="invalid-feedback">{{coupon_info.discount_value}}</span>{{/if}}
                   </div>
                 </div>
@@ -308,7 +292,7 @@
                   <label for="review-title">Start Date<span class="text-danger fs-6">*</span></label>
                   <div class="input-group date">
                     <input type="text"  class="form-control {{#if coupon_info.start_date}}is-invalid{{/if}}" name="start_date" 
-                      value="{{coupon_values.start_date}}"placeholder="Pick coupon start date"  readonly>
+                      value="{{coupon_values.start_date}}"placeholder="Pick coupon start date" disabled>
                     <span class="input-group-text input-group-addon cursor-pointer">
                       <img src="/admin/images/icons/calendar.svg" alt="">
                     </span>
@@ -336,28 +320,21 @@
                     value="{{coupon_values.min_cart_value}}" placeholder="Enter min. cart value">
                   {{#if coupon_info.min_cart_value}}<span class="invalid-feedback">{{coupon_info.min_cart_value}}</span>{{/if}}
                 </div>
+              </div>
+              <div class="col-md-6">
                 <div class="form-group mb-2">
                   <label for="review-title">Max Redeemable<span class="text-danger fs-6">*</span></label>
                   <input type="text" class="form-control {{#if coupon_info.max_redeemable}}is-invalid{{/if}}" 
                     value="{{coupon_values.max_redeemable}}"name="max_redeemable" value="{{coupon_values.landmark}}" 
-                  placeholder="Enter maximum redeemable value">
+                  placeholder="Max up to 100%">
                   {{#if coupon_info.max_redeemable}}<span class="invalid-feedback">{{coupon_info.max_redeemable}}</span>{{/if}}
                 </div>
+              </div>
+              <div class="col-md-12">
                 <div class="form-group mb-2">
                   <label for="review-title">Description<span class="text-danger fs-6">*</span></label>
                   <input type="text" class="form-control {{#if coupon_info.description}}is-invalid{{/if}}" name="description" 
                     value="{{coupon_values.description}}" placeholder="Enter description">
-                  {{#if coupon_info.description}}<span class="invalid-feedback">{{coupon_info.description}}</span>{{/if}}
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-group mb-2">
-                  <label for="review-title">Available Products<span class="text-danger fs-6">*</span></label>
-                  <select class="select-applicable-products1 form-select" id="select-products" name="applied_products[]" multiple="multiple">
-                    {{#each products}}
-                    <option value="{{this._id}}">{{this.product_name}}</option>
-                    {{/each}}
-                  </select>
                   {{#if coupon_info.description}}<span class="invalid-feedback">{{coupon_info.description}}</span>{{/if}}
                 </div>
               </div>
@@ -392,11 +369,14 @@
   });
 
   let status = '{{coupon_info.status}}' || '{{coupon_info.success}}' || '{{coupon_info.error}}';
-  //console.log(status)
+  //console.log({{{json coupon_info}}})
   // show actions on statuses
   if(status){
     if(status == 400){
       let myModal = new bootstrap.Modal($('#addCoupon'))
+      myModal.show()
+    }else if(status == 401){
+      let myModal = new bootstrap.Modal($('#editCoupon'))
       myModal.show()
     }else{
       
@@ -479,9 +459,6 @@
     });
   }
 
-  // json from db to array
-  {{!-- let products = '{{json products}}'.replace(/&quot;/ig,'"').replace(/\\/ig,'\\').replace(/[\x00-\x1F\x7F]/g, ''); --}}
-
   /* edit modal popup */
 	function openEditModal(current){
 
@@ -489,11 +466,10 @@
     
     $('#editCoupon input[name="coupon_code"]').val('{{coupon_values.coupon_code}}'.trim() || current.coupon_code)
     $('#editCoupon input[name="discount_value"]').val('{{coupon_values.discount_value}}'.trim() || current.discount_value)
-    $('#editCoupon select[name="discount_type"]').val(current.discount_type).trigger('change')
     $('#editCoupon input[name="start_date"]').val(formatDate(current.start_date))
     $('#editCoupon input[name="end_date"]').val(formatDate(current.end_date))
     $('#editCoupon input[name="min_cart_value"]').val('{{coupon_values.min_cart_value}}'.trim() || current.min_cart_value)
-    $('#editCoupon input[name="max_redeemable"]').val('{{coupon_values.max_redeemable}}'.trim() || current.max_redeemable)
+    $('#editCoupon input[name="max_redeemable"]').val('{{coupon_values.max_redeemable}}'.trim() || (current.max_redeemable / current.discount_value) * 100)
     $('#editCoupon input[name="description"]').val('{{coupon_values.description}}'.trim() || current.description)
     $('#select-products').val('{{coupon_values.applied_products}}' || current.applied_products).trigger('change')
     $('#btn-update-coupon').attr('aria-label',current._id)
@@ -505,8 +481,8 @@
 
   /* add modal popup */
   $('#btn-add-coupon').click(function(){
-    const applied_products = $('.select-applicable-products').val().length === 0 ? '&applied_products=' : ''
-    let data = `${$('#add-coupon-form').serialize()}${applied_products}`
+    //const applied_products = $('.select-applicable-products').val().length === 0 ? '&applied_products=' : ''
+    let data = $('#add-coupon-form').serialize()
     
     $.ajax({
       type: 'POST',
@@ -520,11 +496,8 @@
 
   
   $('#btn-update-coupon').click(function (){
-    const applied_products = $('#select-products').val().length === 0 ? '&applied_products=' : ''
-    let data = `${$('#update-coupon-form').serialize()}${applied_products}`
-    
-    console.log($(this).attr('aria-label'))
-
+    //const applied_products = $('#select-products').val().length === 0 ? '&applied_products=' : ''
+    let data = $('#update-coupon-form').serialize()
     $.ajax({
       type: 'PUT',
       url: `/admin/update-coupon/${$(this).attr('aria-label')}`,
@@ -535,6 +508,36 @@
     })
   })
 
+  $('.date').on('changeDate',function(e){
+    const selectedDate = new Date(e.date)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0);
+    if(selectedDate < today){
+      Swal.fire({
+        title: 'Error',
+        text: 'Date cannot be in the past',
+        icon: 'error',
+        confirmButtonText: 'Okay'
+      }).then(() => {
+        $(this).find('input').val(formatDate(today))
+      })
+    }
+  })
+
+  $('#addCoupon .date').eq(1).on('changeDate',function(e){
+    const endDate = new Date(e.date)
+    const startDate = new Date(convertedDate($('#addCoupon .date').eq(0).find('input').val()))
+    if(startDate && endDate < startDate){
+      Swal.fire({
+        title: 'Error',
+        text: 'Date cannot be in the past',
+        icon: 'error',
+      }).then(() => {
+        $(this).find('input').val(formatDate(startDate))
+      })
+    }
+  })
+
   // limit selector handling
   $('#limitSelect').on('change', function (){
     $('#limit-form').submit()
@@ -542,10 +545,10 @@
 
   $('.modal').on('hide.bs.modal',function(){
     $.ajax({
-        type: 'GET',
-        url: `/admin/coupon/clear-session`,
-        success: function(msg) {
-        }
+      type: 'GET',
+      url: `/admin/coupon/clear-session`,
+      success: function(msg) {
+      }
     });
   })
 

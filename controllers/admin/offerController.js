@@ -15,7 +15,8 @@ exports.getOffers = async (req,res) => {
   const now = moment(new Date().toLocaleString(),"DD-MM-YYYY").utc().toDate();
   await Offer.updateMany({end_date: {$lt: now}},{offer_status:'expired'})
   
-  const products = await Product.find({},{product_name:1}).sort({'createdAt':-1});
+  //populate here to prevent cat-status error in layout > products.foreach
+  const products = await Product.find({},{product_name:1}).sort({'createdAt':-1}).populate('category','category_status');
   const categories = await Category.find({},{category_name:1}).sort({'createdAt':-1});
 
   const count = await Offer.countDocuments();
@@ -86,11 +87,16 @@ exports.addOffer = async (req,res) => {
     offer.applied_categories = applied_items
   }
 
+  if(offer.discount_value > 10){
+    pInfo.status = 400
+    pInfo.discount_value = 'Discount can\'t exceed 10%'
+    req.session.offer_info = pInfo
+    return res.send({success:false})
+  }
+
   const exist = await Offer.findOne({offer_code:offer.offer_code})
   if(exist) {
-    pInfo.status = 400
-    pInfo.offer_code = 'This offer code already exists'
-    req.session.offer_info = pInfo
+    req.session.offer_info = {status:400,offer_code:'This offer already exists'}
     return res.send({success:false})
   }
 
@@ -133,17 +139,16 @@ exports.updateOffer = async (req,res) => {
 
   //return validation messages on blank
   if(Object.keys(pInfo).length){
-    pInfo.status = 400;
+    pInfo.status = 401;
     req.session.offer_info = pInfo
     return res.send({success:false})
   }
   
-  /* const {offer_code,discount_value,discount_type,start_date,end_date,min_cart_value,max_redeemable,description} =  */
   req.body.offer_code = req.body.offer_code.toUpperCase()
   req.body.start_date = moment(req.body.start_date,"DD-MM-YYYY").utc()
   req.body.end_date = moment(req.body.end_date,"DD-MM-YYYY").utc()
 
-  const {offer_type,applied_items} = req.body
+  const {offer_type,applied_items,discount_value} = req.body
 
   if(offer_type === 'product'){
     req.body.applied_products = applied_items
@@ -151,7 +156,16 @@ exports.updateOffer = async (req,res) => {
     req.body.applied_categories = applied_items
   }
 
-  //console.log(req.body)
+  if(discount_value > 10){
+    pInfo.status = 401
+    pInfo.discount_value = 'Discount can\'t exceed 10%'
+    req.session.offer_info = pInfo
+    return res.send({success:false})
+  }
+
+  const offer = await Offer.findById(offer_id)
+
+  req.body.start_date = offer.start_date
 
   await Offer.findByIdAndUpdate(offer_id,{
     $set:req.body

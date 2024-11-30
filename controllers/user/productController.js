@@ -24,7 +24,22 @@ const viewProduct = async (req, res) => {
   }))
 
 	/* Coupon for product */
-	const coupons = await Coupon.find({coupon_status:{$nin: ['disabled','expired']},applied_products:{$elemMatch:{$eq:productId}}})
+	const coupons = await Coupon.find({
+		coupon_status:{$nin: ['disabled','expired']},
+		applied_products:{$elemMatch:{$eq:productId}},
+	})
+
+	// to show message for used coupons
+	const updatedCoupons =  coupons.map(coupon => {
+		if(user && user.coupons.includes(coupon.coupon_code)){
+			return {
+				...coupon,
+				used: true
+			}
+		}
+		return coupon
+	})
+
 
 	return res.render("user/view_product", {
 		user,
@@ -34,7 +49,7 @@ const viewProduct = async (req, res) => {
 		related_products: productsWithOffer,
 		cartItemsCount: req.session.user ? await fn.getCartItemsCount(req.session.user._id) : 0,
     wishlist: req.session.user ? await fn.getWishlistItems(req.session.user._id) : [],
-		coupons,
+		coupons : updatedCoupons,
 		isAdmin: false,
 	});
 };
@@ -73,6 +88,8 @@ const addReview = async (req, res) => {
 			);
 		}
 	}
+
+	//const existing = await Review.findOne({user: user,productId})
 
 	const review = new Review({
 		productId,

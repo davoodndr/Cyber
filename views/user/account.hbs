@@ -185,15 +185,25 @@
           <div class="product-row">
             {{#each wishlist}}
             <div class="product-item-card  wishlist-item">
-              <a class="product-header cursor-pointer" style="top: 1.5%;" onclick="removeItem('{{this._id}}')">
+              <a class="product-header cursor-pointer z-10" style="top: 1.5%;" onclick="removeItem('{{this._id}}')">
                 <i class="las la-times fs-4 border rounded product-badge"></i>
               </a>
               <a href="/view-product/{{this.product.product_slug}}" class="card-detail-wrapper">
+                <div class="bg-warning product-warning-badge">
+                  <span class="badge">New</span>
+                </div>
                 <div class="card-img-wrapper">
                   <img src="{{this.product.images.[0]}}" alt="{{this.product.product_name}}">
                 </div>
-                
-                <div class="d-flex flex-column rate-sum-wrapper">
+                <div class="d-flex flex-column w-100 rate-sum-wrapper">
+                  <div class="d-inline-flex align-items-center justify-content-between">
+                    <small class="capitalize small-muted">{{this.product.category.category_name}}</small>
+                    <small class="capitalize small-muted {{#if this.product.stock}}text-success{{else}}text-danger{{/if}}">
+                      {{#if this.product.stock}}{{this.product.stock}} in stock
+                      {{else}}Out of stock
+                      {{/if}}
+                    </small>
+                  </div>
                   <h6 class="mb-1">{{this.product.product_name}}</h6>
                   <div class="d-inline-flex card-rating">
                     <div class="product-card-rate-sum d-inline-block">
@@ -217,7 +227,7 @@
                   {{#if this.product.discount}}
                   <div class="d-inline-flex card-offers">
                     <span class="original-price price"  style="line-height:1 !important">{{this.product.pricing.original_price}}</span>
-                    <span class="ms-1 off-discount">-<span class="{{#if (eq this.product.discount_type 'fixed')}}price{{else}}percentage{{/if}}">{{this.product.discount}}</span></span>
+                    <span class="ms-1 off-discount">-<span class="{{#if (eq this.product.discount_type 'fixed')}}price{{else}}percentage{{/if}}">{{this.discount}}</span></span>
                   </div>
                   {{/if}}
                 </div>
@@ -225,27 +235,10 @@
                   <img src="/admin/images/icons/cart_outline.svg" onclick="addToCart('{{this.product._id}}')" alt="">
                 </div>
               </div>
-              <div class="buy-button-wrapper">
+              {{!-- <div class="buy-button-wrapper">
                 <a href="#" class="buy-now-button">Buy Now</a>
-              </div>
-            </div>
-              {{!-- <div class="product-card wishlist-item">
-                <a class="product-header cursor-pointer" style="top: 1.5%;" onclick="removeItem('{{this._id}}')">
-                  <i class="las la-times fs-4 border rounded product-badge"></i>
-                </a>
-                <div class="img-wrapper">
-                  <img src="{{this.product.images.[0]}}" alt="{{this.product.product_name}}">
-                </div>
-                <a href="/view-product/{{this.product.product_slug}}" class="d-flex flex-column justify-content-center">
-                  <div class="product-info">
-                    <div class="product-details">
-                      <h3 class="product-name">{{this.product.product_name}}</h3>
-                      <span class="product-price price">{{this.product.pricing.selling_price}}</span>
-                    </div>
-                    <a href="#" class="product-cta">Buy Now</a>
-                  </div>
-                </a>
               </div> --}}
+            </div>
             {{else}}
               <div class="d-flex border w-100 justify-content-center rounded py-5">
                 <h5 class="m-0">Wishlist is empty now</h5>
@@ -356,6 +349,9 @@
                 {{else if (eq this.order_status 'delivered')}} green
                 {{else}} orange
                 {{/if}}">{{this.order_status}}</span>
+                {{#if (eq this.order_status 'payment pending')}}
+                <button class="order-button error" onclick="retryPayment('{{this._id}}')">Retry Payment</button>
+                {{/if}}
                 <div class="order-actions m-0">
                   <div class="action-button show-pop">
                     <span>Ship to</span>
@@ -374,7 +370,8 @@
                     </div>                    
                   </div>
                   <span class="action-divider"></span>
-                  <a href="/user/download-invoice?order={{this._id}}" class="action-button">
+                  <a href="/user/download-invoice?order={{this._id}}" 
+                    class="action-button {{#if (eq this.order_status 'cancelled')}}disable-element{{/if}}">
                     <span>Invoice</span>
                     <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/7a7cb771bf7454fc003898e0a180ba133271780a6461f20e348e4a803c0c3772?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="" class="filter-icon" />
                   </a>
@@ -409,13 +406,12 @@
                     </div>
                   </div>
                   <div class="order-buttons">
-                    <button class="order-button">Buy Again</button>
                     {{#if (eq ../order_status 'delivered')}} 
                       <button class="order-button" data-val="{{this.product_id}}" data-bs-toggle="modal" data-bs-target="#addReview">
                         Add Review
                       </button>
                     {{else}}
-                      {{#if (eq this.item_status 'cancelled')}}
+                      {{#if (or (eq this.item_status 'cancelled') (eq ../order_status 'cancelled'))}}
                         <button class="order-button bg-light" disabled>
                           Cancelled
                         </button>
@@ -752,8 +748,31 @@
 {{> add_review}}
 
 <script>
+
+  const wishlist = {{{json wishlist}}}
   
-  //console.log('{{{json user}}}')
+  if(wishlist.length){
+    
+    wishlist.forEach((item,i) => {
+
+      const badge_wrapper = $('.product-row .product-item-card').eq(i).find('.product-warning-badge')
+      const badge = $('.product-row .product-item-card').eq(i).find('.product-warning-badge .badge')
+    
+      if(item.product.product_status === 'disabled' || 
+        item.product.category.category_status === 'disabled'){
+          $(badge_wrapper).removeClass('d-none')
+        }else{
+          $(badge_wrapper).addClass('d-none')
+        }
+      
+      if(item.product.product_status === 'disabled' || item.product.category.category_status === 'disabled'){
+        $(badge_wrapper).addClass('bg-danger-subtle')
+        $(badge).addClass('text-danger')
+        $(badge).html('Unavailable')
+      }
+      
+    })
+  }
   
   // varable for setting profile edit query
   let query = '';
@@ -826,7 +845,6 @@
   }
 
   const status = '{{acc_info.status}}'
-  //console.log('{{{json address}}}')
   
   if(status.length){
     if(status == 'password_error'){
@@ -870,6 +888,7 @@
   })
 
   function cancelItem(order_id, item_id){
+
     Swal.fire({
       title: 'Are you sure?',
       icon: 'warning',
@@ -885,14 +904,14 @@
           url: `/cancel-item/${order_id}/${item_id}`,
           success: function(res){
             if(res.success){
-              Toast(1500,res.icon,res.msg).then(()=>{
-                window.location.reload()
-              })
+              window.location.reload()
             }
+            Toast(1500,res.icon,res.msg)
           }
         })
       }
     })
+
   }
 
   // remove item from wishlist

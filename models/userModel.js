@@ -33,7 +33,8 @@ const userSchema = mongoose.Schema({
   },
   googleId : {
     type: String,
-    unique: true
+    unique: true,
+    sparse: true
   },
   user_status: String,
   isBlocked: {
@@ -56,8 +57,8 @@ const userSchema = mongoose.Schema({
   },
   wishlist:[wishListSchema],
   cart:[cartSchema],
-  payment_methods: [String],
-  coupons:[String],
+  payment_methods: [],
+  coupons:[],
   wallet: {
     type: Number,
     default: 0

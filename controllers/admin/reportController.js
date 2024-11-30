@@ -5,28 +5,27 @@ const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 const moment = require('moment');
 
-/* Sales report */
+
 exports.getReport = async (req, res) => {
+  let {skip = 1,limit = 5,page = 1,...filter} = req.query
+  let dataFilter = req.query
 
-  let filter = req.query
+  skip = (parseInt(page) - 1) * parseInt(limit);
+  dataFilter.skip = parseInt(skip)
+  dataFilter.limit = parseInt(limit)
 
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 5;
-  const skip = (page - 1) * limit;
-  
-  const report = await getFilteredOrders(filter)
-  
-  const count = await Order.countDocuments({order_status: {$nin:['cancelled','return']}});
+  const data = await getSalesReport(dataFilter,null)
+  const report = data.filtered.slice(skip, skip+limit)
+  const total = data.total[0]
+
+  const count = total.count
   const totalPages = Math.ceil(count / limit);
 
-
-  const formattedReport = getFormatedReport(report[0].dailySummary,filter)
-
-  res.render('admin/sales_report',{
-    report: formattedReport,
-    overAll:report[0].overallSummary[0],
+  return res.render('admin/sales_report',{
+    report,
     pageName:'report',
     filter,
+    total,
     skip,
     page_limit: limit,
     currentPage: page,
@@ -36,125 +35,446 @@ exports.getReport = async (req, res) => {
   })
 }
 
-const getFilteredOrders = async (filter) => {
+const getSalesReport = async function(dataFilter, orderType){
 
-  const page = parseInt(filter.page) || 1;
-  const limit = parseInt(filter.limit) || 5;
-  const skip = (page - 1) * limit;
+  let {startDate,endDate, page, skip, limit, ...filter} = dataFilter
+  let match = {}, projection = {},group = {_id:null}
+  let dateFormat = 'DD-MM-YYYY'  // for foramt graph
+  let format = 'DD-MM-YYYY'
 
-  let {startDate,endDate = new Date()} = filter
-  let dateMatch = {}, projection = {},group = {}
+
+  //default assign
+  filter = Object.keys(filter).length ? filter : {today:true}
+
+  if(filter.today){
+    startDate = moment(),endDate = moment()
+  }
+  if(filter.daily || filter.weekly || filter.monthly || filter.yearly){
+    startDate = null
+    endDate = moment()
+  }
+  if(filter.yesterday){
+    startDate = moment().subtract(1,'days')
+    endDate = moment().subtract(1,'days')
+  }
+  moment.updateLocale('en', {
+    week: { dow: 0 } // dow: 0 means Sunday is the first day of the week
+  });
+  if(filter.thisWeek){
+    startDate = moment().startOf('week')
+    endDate = moment().endOf('week')
+    format = 'DD ddd'
+  }
+  if(filter.thisMonth){
+    startDate = moment().startOf('month')
+    endDate = moment().endOf('month')
+    format = 'DD ddd'
+  }
+  if(filter.thisYear){
+    startDate = moment().startOf('year')
+    endDate = moment().endOf('year')
+    format = 'MMM'
+  }
+
+  // generally projuction take day
+  
+  orderType ? match = orderType : {};
 
   if(startDate && endDate){
-    startDate = moment.utc(startDate, 'DD-MM-YYYY').startOf('day').toDate();
-    endDate = moment.utc(endDate,"DD-MM-YYYY").endOf('day').toDate()
-    dateMatch.createdAt = { $gte: startDate, $lte: endDate };
+    startDate = moment(startDate, dateFormat).startOf('day').toDate();
+    endDate = moment(endDate,dateFormat).endOf('day').toDate()
+    match.createdAt = { $gte: startDate, $lte: endDate };
+
+    if(moment(endDate).diff(moment(startDate),'days') === 0){
+      projection = {date: {$dateToString: { format: "%H:%M:%S", date: "$createdAt", timezone: "Asia/Kolkata" } } }
+      group.date = { $first: "$date" }
+      format = 'hh:mm A'
+    }
   }
-  projection.day = {$dateToString: { format: "%d-%m-%Y", date: "$createdAt" } }
-  group._id = "$day"
+
+  if(filter.daily || filter.thisWeek || filter.thisMonth || filter.thisYear || filter.custom){
+    projection = {date: {$dateToString: { format: "%d-%m-%Y", date: "$createdAt", timezone: "Asia/Kolkata" } }}
+    group.date = { $first: "$date" }
+  }
 
   if(filter.weekly){
+    projection = {date: {$dateToString: { format: "%d-%m", date: "$createdAt", timezone: "Asia/Kolkata" } }},
+    group.date = { $first: "$date"}
+    format = 'DD ddd'
+  }
+
+  if(filter.monthly){
+    projection = {date: {$dateToString: { format: "%Y-%m", date: "$createdAt", timezone: "Asia/Kolkata" } }},
+    group.date = { $first: "$date"}
+    format = 'YYYY-MMM'
+  }
+
+  if(filter.yearly){
+    projection = {date: {$dateToString: { format: "%Y", date: "$createdAt", timezone: "Asia/Kolkata" } }},
+    group.date = { $first: "$date"}
+    format = 'YYYY'
+  }
+
+  const result = await Order.aggregate([
+    { $match: {...match}},
+    { $lookup: {
+        from: 'users',
+        localField: 'user_id',
+        foreignField: '_id',
+        as: 'customer'
+      }
+    },
+    { $unwind: '$customer'},
+    { $unwind: '$cart'},
+    { $project: 
+      {
+        ...projection, 
+        order_no:1,
+        username: "$customer.username",
+        fullname: "$customer.fullname",
+        quantity: "$cart.quantity",
+        refund: "$cart.refund_amount",
+        isRefunded: "$cart.isRefunded",
+        tax: "$cart.item_tax",
+        discounts: 1,
+        payment_method: 1,
+        payment_status: 1,
+        order_status: {
+          $cond: {
+            if: {
+              $and: [
+                { $ne: ["$order_status", "cancelled"] },
+                { $eq: ["$cart.isRefunded", true] }
+              ]
+            },
+            then: "partially cancelled",
+            else: "$order_status"
+          }
+        },
+        order_total: {
+          $cond: {
+            if: {
+              $and: [
+                { $ne: ["$order_status", "cancelled"] },
+                { $eq: ["$cart.isRefunded", true] }
+              ]
+            },
+            then: { $subtract: ["$order_total", "$cart.refund_amount"] },
+            else: "$order_total"
+          }
+        },
+      }
+    },
+    {
+      $group: 
+      {
+        _id: "$order_no",
+        date: { $first: "$date"},
+        username: { $first: "$username"},
+        fullname: { $first: "$fullname"},
+        isRefunded: { $push: "$isRefunded"},
+        quantity: { $push: "$quantity"},
+        refund: { $push: "$refund"},
+        tax: { $push: "$tax"},
+        discounts: { $first: "$discounts"},
+        order_total: { $push: "$order_total"},
+        payment_method: { $first: "$payment_method"},
+        payment_status: { $first: "$payment_status"},
+        order_status: { $push:"$order_status" }
+
+      }
+    },
+    
+    {$sort: {date: 1}},
+  ])
+
+  const filtered = formatReport(result, filter, format)
+
+  return {
+    filtered: filtered,
+    total: [{
+      tax: filtered.reduce((a,b) => parseFloat(a) + parseFloat(b.tax), 0).toFixed(2),
+      discounts: filtered.filter(el=> el.order_status !== 'cancelled' && el.payment_status === 'paid')
+        .reduce((a,b) => parseFloat(a) + parseFloat(b.discounts), 0).toFixed(2),
+      revenue: filtered.filter(el=> el.order_status !== 'cancelled' && el.payment_status === 'paid')
+        .reduce((a,b) => parseFloat(a) + parseFloat(b.order_total),0).toFixed(2),
+      sold_items: filtered.filter(el=> el.order_status !== 'cancelled' && el.payment_status === 'paid')
+        .reduce((a,b) => parseFloat(a) + parseFloat(b.quantity), 0),
+      count: filtered.length,
+    }]
+  }
+
+}
+
+const formatReport = function(data, filter,format){
+  
+  data.sort((a,b) => moment(b.date,format).valueOf() - moment(a.date,format).valueOf())
+
+  return data.map(item => {
+    let date = null
+    if(filter.weekly){
+      date = item.date
+    }else if(filter.monthly){
+      date = moment(item.date).format(format)
+    }else if(filter.yearly){
+      date = item.date
+    }else{
+      let itemFormat = fn.checkDateOrTime(item.date)
+      itemFormat = itemFormat === 'date' ? 'DD-MM-YYYY' : 'HH:mm:ss'
+      date = moment.parseZone(item.date,itemFormat).format(format)
+      if(date === 'Invalid date') date = '00-00-00'
+    }
+
+    //console.log('item',item)
+
+    const partialOrder = item.order_status.find(status => status === 'partially cancelled')
+
+    if(partialOrder){
+      item.isRefunded.forEach((el,index) => {
+        // checking is refunded
+        if(el === true){
+          item.quantity = item.quantity.filter((el,i)=> i !== index).reduce((acc,cur) => acc+ cur,0)
+          item.refund = item.refund[index]
+          item.tax = item.tax.filter((el,i)=> i !== index).reduce((acc,cur) => acc+ cur,0)
+          item.order_total = item.order_total[index]
+          item.order_status = 'partially cancelled'
+        }
+      })
+    }else{
+      item.quantity = item.quantity.reduce((acc,cur) => acc+ cur,0)
+      item.refund = item.refund.reduce((acc,cur) => acc+ cur,0)
+      item.tax = item.tax.reduce((acc,cur) => acc+ cur,0)
+      item.order_total = item.order_total.reduce((acc,cur) => acc+ cur,0)
+      item.order_status = item.order_status[0]
+    }
+    
+    return {
+      date,
+      order_no: item._id,
+      customer: item.fullname && item.fullname.length ? item.fullname : item.username,
+      quantity: item.quantity,
+      tax: item.tax,
+      discounts: item.discounts.toFixed(2),
+      order_total: item.order_total.toFixed(2),
+      payment_method: item.payment_method,
+      payment_status: item.payment_status,
+      order_status: item.order_status
+    }
+  })
+}
+
+/* const getFilteredOrders = async (filter,orderType) => {
+
+  let {startDate = moment(),endDate = moment()} = filter
+  let match = {}, projection = {},group = {_id:null}
+  let dateFormat = 'DD-MM-YYYY'  // for foramt graph
+  let format = 'DD-MM-YYYY'
+
+  //default assign
+  filter.today = true
+
+  if(filter.today){
+    startDate = moment(),endDate = moment()
+  }
+  if(filter.daily || filter.weekly || filter.monthly || filter.yearly){
+    startDate = null
+    endDate = moment()
+  }
+  if(filter.yesterday){
+    startDate = moment().subtract(1,'days')
+    endDate = moment().subtract(1,'days')
+  }
+  moment.updateLocale('en', {
+    week: { dow: 0 } // dow: 0 means Sunday is the first day of the week
+  });
+  if(filter.thisWeek){
+    startDate = moment().startOf('week')
+    endDate = moment().endOf('week')
+    format = 'DD ddd'
+  }
+  if(filter.thisMonth){
+    startDate = moment().startOf('month')
+    endDate = moment().endOf('month')
+    format = 'DD ddd'
+  }
+  if(filter.thisYear){
+    startDate = moment().startOf('year')
+    endDate = moment().endOf('year')
+    format = 'MMM'
+  }
+
+  // generally projuction take day
+  
+  orderType ? match = orderType : {};
+
+  if(startDate && endDate){
+    startDate = moment(startDate, dateFormat).startOf('day').toDate();
+    endDate = moment(endDate,dateFormat).endOf('day').toDate()
+    match.createdAt = { $gte: startDate, $lte: endDate };
+
+    if(moment(endDate).diff(moment(startDate),'days') === 0){
+      projection = {timeOfDay: {$dateToString: { format: "%H:%M:%S", date: "$createdAt" } } }
+      group._id = "$timeOfDay"
+      format = 'hh:mm A'
+    }
+  }
+
+  if(filter.daily || filter.thisWeek){
+    projection = {day: {$dateToString: { format: "%d-%m-%Y", date: "$createdAt" } }}
+    group._id = "$day"
+  }
+
+  if(filter.weekly || filter.thisMonth){
     projection = {
       year: { $year: "$createdAt" },
       week: { $isoWeek: "$createdAt" }
     }
     group._id = { year: "$year", week: "$week" }
+    format = 'DD/MM'
   }
 
-  if(filter.monthly){
+  if(filter.monthly || filter.thisYear){
     projection = {
       year: { $year: "$createdAt" },
       month: { $month: "$createdAt" }
     }
-    //projection.month = {$dateToString: { format: "%m-%Y", date: "$createdAt" } }
     group._id = { year: "$year", month: "$month" }
-    //group._id = "$month"
+    format = 'MMM-YY'
   }
 
   if(filter.yearly){
     projection.year = { $year: "$createdAt" }
     group._id = "$year"
+    format = 'YYYY'
   }
 
-  return await Order.aggregate([
-    { $match: 
-      { 
-        order_status: {$nin:['cancelled','return']},
-        ...dateMatch
-      },
-    },
+  //console.log('match',match,'filter',filter, 'projection',projection,'group',group)
+
+  const result = await Order.aggregate([
+    { $match: {...match}},
     { $project: 
       {
         ...projection,
-        total_amount: "$order_total", order_subtotal:1, tax:1, discounts:1,
-        actual_revenue: { $sum: ["$order_subtotal"]},
-        items: {$sum: "$cart.quantity"},
+        total_amount: {$subtract : ["$order_total","$tax"]}, order_subtotal:1, tax:1, discounts:1,
+        subtotal: { $sum: ["$order_subtotal"]},
+        items: {$sum: "$cart.quantity"}
       } 
     },
     { $group: 
       {
         ...group,
-        sales_revenue: { $sum: "$actual_revenue" },
-        total_tax: {$sum: "$tax"},
+        subtotal: { $sum: "$subtotal" },
+        tax: {$sum: "$tax"},
         discounts: { $sum: "$discounts" },
-        net_revenue: { $sum: "$total_amount" },
+        revenue: { $sum: "$total_amount" },
         orders: { $sum: 1 },
         sold_items: {$sum: "$items" },
       } 
     },
-    { $sort: { _id: 1 } },
-    { 
-      $facet: {
-        dailySummary: [
-          { $skip: skip },
-          { $limit: limit }
+    {$sort: {_id: 1}},
+    {
+      $facet : {
+        filtered: [
+          ...(filter.skip ? [{$skip: filter.skip}] : []),
+          ...(filter.limit ? [{$limit: filter.limit}] : [])
         ],
-        overallSummary: [
+        total: [
           { 
             $group: {
               _id: null,
-              overall_sales_revenue: { $sum: "$sales_revenue" },
-              overall_tax: {$sum: "$total_tax"},
-              overall_discounts: { $sum: "$discounts" },
-              overall_net_revenue: { $sum: "$net_revenue" },
-              overall_orders: { $sum: "$orders" },
-              overall_sold_items: { $sum: "$sold_items" }
+              total_subtotal: { $sum: "$subtotal" },
+              total_tax: {$sum: "$tax"},
+              total_discounts: { $sum: "$discounts" },
+              total_revenue: { $sum: "$revenue" },
+              total_orders: { $sum: "$orders" },
+              total_sold_items: { $sum: "$sold_items" },
+              count: {$sum: 1}
             }
           }
         ]
       }
     }
   ]);
+
+  if(result[0].filtered.length === 0) {
+    result[0].filtered = [{
+      subtotal: 0,
+      tax: 0,
+      discounts: 0,
+      revenue: 0,
+      orders: 0,
+      sold_items: 0,
+      date: '00-00-00'
+    }]
+    result[0].total = [{
+      total_subtotal: 0,
+      total_tax: 0,
+      total_revenue: 0,
+      total_discounts: 0,
+      total_orders: 0,
+      total_sold_items: 0,
+      count:0
+    }]
+  }
+
+  return {
+    filtered: getFormatedReport(result[0].filtered, filter, format),
+    total: result[0].total.map(item => {
+      return {
+        sales: item.total_subtotal.toFixed(2),
+        tax: item.total_tax.toFixed(2),
+        discounts: item.total_discounts.toFixed(2),
+        revenue: item.total_revenue.toFixed(2),
+        orders: item.total_orders,
+        sold_items: item.total_sold_items,
+        count: item.count
+      }
+    })
+  }
 }
 
-const getFormatedReport = function(data, filter){
+const getFormatedReport = function(data, filter,format){
+  
+  data.sort((a,b) => moment(a._id,format).valueOf() - moment(b._id,format).valueOf())
+
   return data.map(item => {
     let date = null
-    if(filter.weekly){
-      const dateRange = fn.getDateRangeOfWeek(item._id.week,item._id.year,'DD-MM-YY')
-      date = `${dateRange.start} - ${dateRange.end}`
-    }else if(filter.monthly){
-      const dateRange = fn.getDateRangeOfMonth(item._id.month - 1,item._id.year,'MMM-YY')
-      date = `${dateRange.start}`
+    if(filter.weekly || filter.thisMonth){
+      const start = moment().year(item._id.year).week(item._id.week).startOf('week').format(format)
+      const end = moment().year(item._id.year).week(item._id.week).endOf('week').format(format)
+      date = `${start} - ${end} (${item._id.year})`
+    }else if(filter.monthly || filter.thisYear){
+      const start = moment().year(item._id.year).month(item._id.month).startOf('month').format(format)
+      date = start
+    }else if(filter.yearly){
+      date = moment().year(item._id).format(format)
     }else{
-      date = item._id
+      let itemFormat = fn.checkDateOrTime(item._id)
+      itemFormat = itemFormat === 'date' ? 'DD-MM-YYYY' : 'HH:mm:ss'
+      date = moment.parseZone(item._id,itemFormat).format(format)
+      if(date === 'Invalid date') date = '00-00-00'
     }
-    item.sales_revenue = item.sales_revenue.toFixed(2)
-    item.total_tax = item.total_tax.toFixed(2)
-    item.discounts = item.discounts.toFixed(2)
-    item.net_revenue = item.net_revenue.toFixed(2)
+    
     return {
-      ...item,
+      sales: item.subtotal.toFixed(2),
+      tax: item.tax.toFixed(2),
+      discounts: item.discounts.toFixed(2),
+      revenue: item.revenue.toFixed(2),
+      orders: item.orders,
+      sold_items: item.sold_items,
       date
     }
   })
-}
+} */
 
 exports.downloadPDF = async(req,res) => {
 
-  const report = await getFilteredOrders(req.query);
+  let filters = req.query
+  /* filters.skip = 0
+  filters.limit = 0 */
+  const report = await getSalesReport(filters,null);
 
-  const pdfData = await generatePDF(report[0],req.query);
+  const pdfData = await generatePDF(report,req.query);
   
   //res.setHeader('Content-Disposition', 'attachment; filename=sales_report.pdf');
   res.setHeader('Content-Disposition', 'inline; filename=sales_report.pdf');
@@ -180,7 +500,7 @@ const generatePDF = async (salesData,filter) => {
 
     generateHeader(doc,filter);
 	  
-    generateInvoiceTable(doc,salesData,filter)
+    generateInvoiceTable(doc,salesData)
 
     generateFooter(doc);
 
@@ -188,7 +508,9 @@ const generatePDF = async (salesData,filter) => {
   });
 };
 
-function generateHeader(doc,filter) {
+function generateHeader(doc,query) {
+
+  let {skip = 1,limit = 5,page = 1,startDate= '', endDate= '',...filter} = query
 
   const dynamicTitle = Object.keys(filter)[0].charAt(0).toUpperCase() + Object.keys(filter)[0].slice(1).toLowerCase()
 
@@ -217,96 +539,82 @@ function generateFooter(doc) {
 	);
 }
 
-function generateInvoiceTable(doc, invoice,filter) {
+function generateInvoiceTable(doc, invoice) {
   let i;
   const invoiceTableTop = 160;
+
+  function checkPageBreak(position, doc) {
+    const pageHeight = doc.page.height;
+    const marginBottom = doc.page.margins.bottom;
+    
+    if (position > pageHeight - marginBottom - 30) { 
+      doc.addPage();
+      return invoiceTableTop;
+    }
+  
+    return position;
+  }
 
   doc.font("Helvetica-Bold");
   generateTableRow(
     doc,
     invoiceTableTop,
-    "Date",
-    "Sales",
+    "Date/Time",
+    "Customer",
+    "Products",
     "Tax",
     "Discounts",
-    "Net Revenue",
-    "Orders",
-    "Sold Items"
+    "Total",
+    "Payment",
+    "Status"
   );
   generateHr(doc, invoiceTableTop + 20);
   doc.font("Helvetica");
 
-  const orderData = getFormatedReport(invoice.dailySummary,filter)
+  const orderData = invoice.filtered
+
+  let position = invoiceTableTop + 30;
 
   for (i = 0; i < orderData.length; i++) {
     const item = orderData[i];
-    const position = invoiceTableTop + (i + 1) * 30;
+    //const position = invoiceTableTop + (i + 1) * 30;
+    position = checkPageBreak(position, doc);
+
     generateTableRow(
       doc,
       position,
       item.date,
-      item.sales_revenue,
-      item.total_tax,
+      item.customer,
+      item.quantity,
+      item.tax,
       item.discounts,
-      item.net_revenue,
-      item.orders,
-      item.sold_items
+      item.order_total,
+      item.payment_method,
+      item.order_status
     );
 
     generateHr(doc, position + 20);
+
+    position += 30;
   }
 
-  const summery = invoice.overallSummary[0]
-  const totalsPosition = invoiceTableTop + (i + 1) * 30
+  const summery = invoice.total[0]
+  //const totalsPosition = invoiceTableTop + (i + 1) * 30
+  position = checkPageBreak(position, doc);
   doc.font("Helvetica-Bold");
   generateTableRow(
     doc,
-    totalsPosition,
+    //totalsPosition,
+    position,
     "Totals:",
-    summery.overall_sales_revenue.toFixed(2),
-    summery.overall_tax.toFixed(2),
-    summery.overall_discounts.toFixed(2),
-    summery.overall_net_revenue.toFixed(2),
-    summery.overall_orders,
-    summery.overall_sold_items
+    "",
+    summery.sold_items,
+    summery.tax,
+    summery.discounts,
+    summery.revenue,
   );
 
   generateHr(doc, invoiceTableTop + 20);
-
-  /*   const subtotalPosition = invoiceTableTop + (i + 1) * 30;
-  generateTableRow(
-    doc,
-    subtotalPosition,
-    "",
-    "",
-    "Subtotal",
-    "",
-    formatCurrency(invoice.subtotal)
-  );
-
-const paidToDatePosition = subtotalPosition + 20;
-  generateTableRow(
-    doc,
-    paidToDatePosition,
-    "",
-    "",
-    "Paid To Date",
-    "",
-    formatCurrency(invoice.paid)
-  );
-
-  const duePosition = paidToDatePosition + 25;
-  doc.font("Helvetica-Bold");
-  generateTableRow(
-    doc,
-    duePosition,
-    "",
-    "",
-    "Balance Due",
-    "",
-    formatCurrency(invoice.subtotal - invoice.paid)
-  );
-  doc.font("Helvetica"); */
 }
 
 function generateHr(doc, y) {
@@ -322,33 +630,34 @@ function formatCurrency(cents) {
   return /* "$" + */ (cents).toFixed(2);
 }
 
-function generateTableRow(doc, y, c1, c2, c3, c4, c5, c6, c7) {
+function generateTableRow(doc, y, c1, c2, c3, c4, c5, c6, c7, c8) {
 	doc.fontSize(10)
 		.text(c1, 50, y)
-		.text(c2, 140, y,{width: 90, align: 'right'})
-    .text(c3, 200, y,{width: 90, align: 'right'})
-		.text(c4, 270, y, { width: 90, align: 'right' })
-		.text(c5, 350, y, { width: 90, align: 'right' })
-    .text(c6, 460, y, { width: 90, align: 'left' })
-		.text(c7, 510, y, { align: 'left' });
+		.text(c2, 110, y,{width: 90, align: 'left'})
+    .text(c3, 130, y,{width: 90, align: 'right'})
+		.text(c4, 200, y, { width: 90, align: 'right' })
+		.text(c5, 270, y, { width: 90, align: 'right' })
+    .text(c6, 350, y, { width: 90, align: 'right' })
+    .text(c7, 460, y, { width: 90, align: 'left' })
+		.text(c8, 500, y, { align: 'right' });
 }
-
 
 const generateExcel = (salesData,filter) => {
 
-  const order_data = getFormatedReport(salesData.dailySummary,filter)
+  const order_data = salesData.filtered
 
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Sales Report');
 
   worksheet.columns = [
-    { header: 'Date', key: 'date', width: 20 },
-    { header: 'Sales Revenue', key: 'sales_revenue', width: 20 },
+    { header: 'Date/Time', key: 'date', width: 10 },
+    { header: 'Customer', key: 'customer', width: 20 },
+    { header: 'Products', key: 'products', width: 10 },
     { header: 'Tax', key: 'tax', width: 10 },
     { header: 'Discounts', key: 'discounts', width: 10 },
-    { header: 'Net Revenue', key: 'net_revenue', width: 20 },
-    { header: 'Orders', key: 'orders', width: 10 },
-    { header: 'Sold Items', key: 'sold_items', width: 10 },
+    { header: 'Total', key: 'total', width: 10 },
+    { header: 'Payment', key: 'payment', width: 10},
+    { header: 'Status', key: 'status', width: 10 },
   ];
 
   // formating
@@ -362,45 +671,46 @@ const generateExcel = (salesData,filter) => {
     };
   });
 
-
   order_data.forEach((sale) => {
     worksheet.addRow({
       date: sale.date,
-      sales_revenue: sale.sales_revenue,
-      tax: sale.total_tax,
+      customer: sale.customer,
+      products: sale.quantity,
+      tax: sale.tax,
       discounts: sale.discounts,
-      net_revenue: sale.net_revenue,
-      sales_revenue: sale.sales_revenue,
-      orders: sale.orders,
-      sold_items: sale.sold_items,
+      total: sale.order_total,
+      payment: sale.payment_method,
+      status: sale.order_status,
     });
   });
 
-  worksheet.getColumn('sales_revenue').numFmt = '"₹"#,##0.00';
-  worksheet.getColumn('tax').numFmt = '"₹"#,##0.00';
-  worksheet.getColumn('discounts').numFmt = '"₹"#,##0.00';
-  worksheet.getColumn('net_revenue').numFmt = '"₹"#,##0.00';
+  // ₹ symbol not supported
+  /* worksheet.getColumn('sales').numFmt = '#,##0.00';
+  worksheet.getColumn('tax').numFmt = '#,##0.00';
+  worksheet.getColumn('discounts').numFmt = '#,##0.00';
+  worksheet.getColumn('revenue').numFmt = '#,##0.00'; */
 
 
   worksheet.addRow({
     date: "",
-    sales_revenue: "",
+    customer: "",
+    products: "",
     tax: "",
     discounts: "",
-    net_revenue: "",
-    orders: "",
-    sold_items: "",
+    total: "",
+    payment: "",
+    status: "",
   })
 
-  const summery = salesData.overallSummary[0]
+  const summery = salesData.total[0]
+  
   worksheet.addRow({
     date: 'Totals:',
-    sales_revenue: summery.overall_sales_revenue,
-    tax: summery.overall_tax,
-    discounts: summery.overall_discounts,
-    net_revenue: summery.overall_net_revenue,
-    orders: summery.overall_orders,
-    sold_items: summery.overall_sold_items,
+    customer: "",
+    products: summery.sold_items,
+    tax: summery.tax,
+    discounts: summery.discounts,
+    total: summery.revenue,
   })
 
   const lastRow = worksheet.lastRow;
@@ -412,9 +722,12 @@ const generateExcel = (salesData,filter) => {
 };
 
 exports.downloadEXCEL = async (req, res) => {
-  const report = await getFilteredOrders(req.query);
+  let filters = req.query
+  /* filters.skip = 0
+  filters.limit = 0 */
+  const report = await getSalesReport(filters,null);
 
-  const workbook = generateExcel(report[0],req.query);
+  const workbook = generateExcel(report,req.query);
 
   res.setHeader('Content-Disposition', 'attachment; filename=sales_report.xlsx');
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

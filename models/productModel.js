@@ -27,8 +27,14 @@ const productSchema = new mongoose.Schema({
   product_status: String,
   description: String,
   pricing: {
-    original_price: Number,
-    selling_price: Number
+    original_price: {
+      type: Number,
+      default: 0
+    },
+    selling_price: {
+      type: Number,
+      default: 0
+    }
   },
   stock: Number,
   brand: String,
@@ -41,14 +47,10 @@ const productSchema = new mongoose.Schema({
     spec_value: String,
   }],
   variants:[variantSchema],
-  /* highlights:{
-    highlight_name: String,
-    highlight_value: String
-  },*/
   tax: {
     type: Number,
     default: function() {
-      return this.pricing.selling_price * 0.05;
+      return this.pricing.original_price * 0.05;
     }
   },
   images:[String],
@@ -64,11 +66,12 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  badge:String,
 },{timestamps:true})
 
 productSchema.pre('save', function(next) {
   if (this.isModified('stock')) {
-    this.max_quantity = Math.max(1,Math.min(Math.floor(item.stock / 3),10));
+    this.max_quantity = Math.max(1,Math.min(Math.floor(this.stock / 3),10));
   }
   next();
 });

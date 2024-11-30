@@ -206,17 +206,17 @@
             <h5 class="card-header">Pricing & Availability</h5>
             <div class="card-body">
               <div class="mb-3">
-                <label for="original-price" class="form-label">Original Price</label>
+                <label for="original-price" class="form-label">Price</label>
                 <input type="text" name="original_price" class="form-control {{#if product_info.original_price}}is-invalid{{/if}}"
                   value="{{remember product_values.original_price product.pricing.original_price}}" id="original-price" placeholder="Enter original price">
                 {{#if product_info.original_price}}<span class="invalid-feedback">{{product_info.original_price}}</span>{{/if}}
               </div>
-              <div class="mb-3">
+              {{!-- <div class="mb-3">
                 <label for="selling-price" class="form-label">Selling Price</label>
                 <input type="text" name="selling_price" class="form-control {{#if product_info.selling_price}}is-invalid{{/if}}"
                   value="{{remember product_values.selling_price product.pricing.selling_price}}" id="selling-price" placeholder="Enter selling price">
                 {{#if product_info.selling_price}}<span class="invalid-feedback">{{product_info.selling_price}}</span>{{/if}}
-              </div>
+              </div> --}}
               <div class="mb-3">
                 <label for="stock" class="form-label">Stock</label>
                 <input type="text" name="stock" class="form-control {{#if product_info.stock}}is-invalid{{/if}}"
@@ -256,7 +256,7 @@
           </div>
 
           <!-- Variants Type -->
-          <div class="card mb-4">
+          {{!-- <div class="card mb-4">
             <div class="card-header d-flex align-items-center justify-content-between">
               <h5>Variants Type</h5>
               <a id="btn-add-type" class="btn text-primary">
@@ -269,12 +269,12 @@
                 
               </div>
             </div>
-          </div>
+          </div> --}}
 
         </div>
 
         <!-- Add Varaiant -->
-        <input type="hidden" id="vars" value="{{product.variants}}">
+        {{!-- <input type="hidden" id="vars" value="{{product.variants}}">
         <div class="col-12 mb-5">
           <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between">
@@ -297,52 +297,11 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {{!-- {{#each product.variants}}
-                    <tr>
-                      <td><input type="checkbox" class="form-check-input"></td>
-                      <td class="">
-                        <a class="btn btn-light border text-primary">
-                          <i class="las la-plus"></i>
-                        </a>
-                      </td>
-                      <td>
-                        <div class="">
-                          <select name="variants[{{@index}}][var_name]" class="form-select" id="var-name-select">
-                            <option selected value="">Select Name</option>
-                          </select>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="">
-                          <select name="variants[{{@index}}][var_option]" class="form-select" id="var-option-select">
-                            <option selected value="">Select Option</option>
-                          </select>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="">
-                          <input type="text" name="variants[{{@index}}][var_price]"
-                            value="{{this.var_price}}" class="form-control" placeholder="Price">
-                        </div>
-                      </td>
-                      <td>
-                        <div class="">
-                          <input type="text" name="variants[{{@index}}][var_count]"
-                            value="{{this.var_count}}" class="form-control" placeholder="Count">
-                        </div>
-                      </td>
-                      <td class="px-3">
-                        <a class="btn btn-light border" id="btn-del-variant">
-                          <i class="lar la-trash-alt"></i>
-                        </a>
-                      </td>
-                    </tr>
-                  {{/each}} --}}
                 </tbody>
               </table>
             </div>
           </div>
-        </div>
+        </div> --}}
 
       </div>
     </form>

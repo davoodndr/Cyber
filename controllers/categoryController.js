@@ -106,25 +106,27 @@ const deleteCategory = async (req, res) => {
     $set:{is_deleted:true,category_status: 'disabled'}
   }).then(() => {
     req.session.cat_info = {status:200, msg: 'Category deleted successfully'}
+    res.send({success:true})
   }).catch(err => {
     console.log(err);
   })
 
-  return res.redirect('/admin/categories')
+  //return res.redirect('/admin/categories')
 }
 
 const restoreCategory = async (req, res) => {
   const {id} = req.params
   
   await Categories.findOneAndUpdate({_id:id},{
-    $set:{is_deleted:false,category_status: 'draft'}
+    $set:{is_deleted:false,category_status: 'active'}
   }).then(() => {
     req.session.cat_info = {status:200, msg: 'Category restored successfully'}
+    res.send({success:true})
   }).catch(err => {
     console.log(err);
   })
   
-  return res.redirect('/admin/categories')
+  //return res.redirect('/admin/categories')
 }
 
 const clearSession = (req, res) => {

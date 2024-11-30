@@ -48,7 +48,7 @@
       <thead>
         <tr>
           <th><input class="form-check-input" type="checkbox"></th>
-          <th style="--w:200px">id</th>
+          <th style="--w:200px">SL</th>
           <th style="--w:200px">Category</th>
           <th style="--w:200px">status</th>
           <th style="--w:150px">Actions</th>
@@ -58,7 +58,7 @@
         {{#each categories}}
           <tr>
             <td><input class="form-check-input" type="checkbox"></td>
-            <td style="--w:250px">{{_id}}</td>
+            <td style="--w:250px">{{add @index 1}}</td>
             <td style="--w:200px">{{category_name}}</td>
             <td style="--w:200px">
               <div class="status 
@@ -87,22 +87,12 @@
                 {{!-- <a onclick="deleteCategory('{{this._id}}')" class="action-btn">
                   <i class="lar la-trash-alt"></i>
                 </a> --}}
-                <form id="delete-form" action="/admin/delete-category/{{this._id}}" method="get"></form>
+                {{!-- <form id="delete-form" action="/admin/delete-category/{{this._id}}" method="get"></form> --}}
                 <div class="action-btn">
                   <svg width="4" height="17" viewBox="0 0 4 17" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2 16.98C1.45 16.98 0.979167 16.7841 0.5875 16.3925C0.195833 16.0008 0 15.53 0 14.98C0 14.43 0.195833 13.9591 0.5875 13.5675C0.979167 13.1758 1.45 12.98 2 12.98C2.55 12.98 3.02083 13.1758 3.4125 13.5675C3.80417 13.9591 4 14.43 4 14.98C4 15.53 3.80417 16.0008 3.4125 16.3925C3.02083 16.7841 2.55 16.98 2 16.98ZM2 10.98C1.45 10.98 0.979167 10.7841 0.5875 10.3925C0.195833 10.0008 0 9.52998 0 8.97998C0 8.42998 0.195833 7.95915 0.5875 7.56748C0.979167 7.17581 1.45 6.97998 2 6.97998C2.55 6.97998 3.02083 7.17581 3.4125 7.56748C3.80417 7.95915 4 8.42998 4 8.97998C4 9.52998 3.80417 10.0008 3.4125 10.3925C3.02083 10.7841 2.55 10.98 2 10.98ZM2 4.97998C1.45 4.97998 0.979167 4.78415 0.5875 4.39248C0.195833 4.00081 0 3.52998 0 2.97998C0 2.42998 0.195833 1.95915 0.5875 1.56748C0.979167 1.17581 1.45 0.97998 2 0.97998C2.55 0.97998 3.02083 1.17581 3.4125 1.56748C3.80417 1.95915 4 2.42998 4 2.97998C4 3.52998 3.80417 4.00081 3.4125 4.39248C3.02083 4.78415 2.55 4.97998 2 4.97998Z" fill="currentColor"/>
                   </svg>
                   <ul class="popup-menu">
-                    {{!-- <li>
-                      <a href="#" class="soft-delete">
-                        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M30 48C30 48.5304 30.2107 49.0391 30.5858 49.4142C30.9609 49.7893 31.4696 50 32 50C32.5304 50 33.0391 49.7893 33.4142 49.4142C33.7893 49.0391 34 48.5304 34 48V30C34 29.4696 33.7893 28.9609 33.4142 28.5858C33.0391 28.2107 32.5304 28 32 28C31.4696 28 30.9609 28.2107 30.5858 28.5858C30.2107 28.9609 30 29.4696 30 30V48ZM24 30C23.4696 30 22.9609 30.2107 22.5858 30.5858C22.2107 30.9609 22 31.4696 22 32V44C22 44.5304 22.2107 45.0391 22.5858 45.4142C22.9609 45.7893 23.4696 46 24 46C24.5304 46 25.0391 45.7893 25.4142 45.4142C25.7893 45.0391 26 44.5304 26 44V32C26 31.4696 25.7893 30.9609 25.4142 30.5858C25.0391 30.2107 24.5304 30 24 30ZM40 46C40.5304 46 41.0391 45.7893 41.4142 45.4142C41.7893 45.0391 42 44.5304 42 44V32C42 31.4696 41.7893 30.9609 41.4142 30.5858C41.0391 30.2107 40.5304 30 40 30C39.4696 30 38.9609 30.2107 38.5858 30.5858C38.2107 30.9609 38 31.4696 38 32V44C38 44.5304 38.2107 45.0391 38.5858 45.4142C38.9609 45.7893 39.4696 46 40 46Z" fill="black"/>
-                          <path d="M56 6H47.441L45.897 1.368C45.7644 0.96975 45.5098 0.62333 45.1693 0.377808C44.8288 0.132285 44.4198 0.000108802 44 0L20 0C19.5802 0.000108802 19.1712 0.132285 18.8307 0.377808C18.4902 0.62333 18.2356 0.96975 18.103 1.368L16.559 6H8C7.46957 6 6.96086 6.21071 6.58579 6.58579C6.21071 6.96086 6 7.46957 6 8V16C6 16.5304 6.21071 17.0391 6.58579 17.4142C6.96086 17.7893 7.46957 18 8 18H10V58C10 61.309 12.691 64 16 64H48C51.309 64 54 61.309 54 58V18H56C56.5304 18 57.0391 17.7893 57.4142 17.4142C57.7893 17.0391 58 16.5304 58 16V8C58 7.46957 57.7893 6.96086 57.4142 6.58579C57.0391 6.21071 56.5304 6 56 6ZM54 14H32C31.4696 14 30.9609 14.2107 30.5858 14.5858C30.2107 14.9609 30 15.4696 30 16C30 16.5304 30.2107 17.0391 30.5858 17.4142C30.9609 17.7893 31.4696 18 32 18H50V58C50 59.103 49.103 60 48 60H16C14.897 60 14 59.103 14 58V16C14 15.4696 13.7893 14.9609 13.4142 14.5858C13.0391 14.2107 12.5304 14 12 14H10V10H18C18.4198 9.99989 18.8288 9.86771 19.1693 9.62219C19.5098 9.37667 19.7644 9.03025 19.897 8.632L21.441 4H42.558L44.102 8.632C44.2348 9.03033 44.4896 9.37678 44.8302 9.6223C45.1709 9.86781 45.5801 9.99995 46 10H54V14Z" fill="black"/>
-                          <path d="M22.59 14.5898C22.21 14.9598 22 15.4698 22 15.9998C22 16.5298 22.21 17.0398 22.59 17.4098C22.96 17.7898 23.47 17.9998 24 17.9998C24.53 17.9998 25.04 17.7898 25.41 17.4098C25.79 17.0398 26 16.5298 26 15.9998C26 15.4698 25.79 14.9598 25.41 14.5898C24.66 13.8398 23.33 13.8398 22.59 14.5898Z" fill="black"/>
-                        </svg>
-                        <span>Soft Delete</span>
-                      </a>
-                    </li> --}}
                     <li>
                       <a onclick="deleteCategory('{{this._id}}')">
                         <i class="lar la-trash-alt"></i>
@@ -111,7 +101,7 @@
                     </li>
                     {{#if this.is_deleted}}
                       <li>
-                        <a href="/admin/restore-category/{{this._id}}">
+                        <a onclick="restoreCategory('{{this._id}}')">
                           <i class="las la-redo-alt"></i>
                           <span>Restore</span>
                         </a>
@@ -153,7 +143,7 @@
 
 <!-- Add Modal -->
 <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-custom">
       <div class="modal-content">
           <div class="modal-header">
               <h5 class="modal-title" id="addCategoryModalLabel">Create Category</h5>
@@ -183,9 +173,8 @@
             <div class="modal-footer">
               <button
                 type="button"
-                class="btn btn-secondary"
                 data-bs-dismiss="modal">Close</button>
-              <button type="submit" form="add-form" class="btn btn-primary">Save changes</button>
+              <button type="submit" form="add-form">Save changes</button>
             </div>
       </div>
   </div>
@@ -193,7 +182,7 @@
 
 <!-- Edit Modal -->
 <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-custom">
       <div class="modal-content">
           <div class="modal-header">
               <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
@@ -224,9 +213,8 @@
             <div class="modal-footer">
               <button
                 type="button"
-                class="btn btn-secondary"
                 data-bs-dismiss="modal">Close</button>
-              <button type="submit" form="edit-form" class="btn btn-primary">Save changes</button>
+              <button type="submit" form="edit-form">Save changes</button>
             </div>
       </div>
   </div>
@@ -235,15 +223,12 @@
 <script>
   let status = '{{cat_info.status}}'
   
-  //console.log(status)
-
   // show actions on statuses
   if(status){
     if(status == 400){
       let myModal = new bootstrap.Modal($('#addCategoryModal'))
       myModal.show()
     }else if(status == 200){
-      //alert('{{cat_info.msg}}')
       Swal.fire({
         title: "Success!",
         text: '{{cat_info.msg}}',
@@ -282,7 +267,15 @@
       confirmButtonText: "Yes, delete it!"
     }).then((result) => {
       if (result.isConfirmed) {
-        $('#delete-form').submit()
+        $.ajax({
+          type: 'DELETE',
+          url: `/admin/delete-category/${id}`,
+          success: function(response){
+            if(response.success){
+              window.location.reload()
+            }
+          }
+        })
       }
     });
   }
@@ -298,7 +291,15 @@
       confirmButtonText: "Yes, restore it!"
     }).then((result) => {
       if (result.isConfirmed) {
-        $('#delete-form').submit()
+        $.ajax({
+          type: 'PATCH',
+          url: `/admin/restore-category/${id}`,
+          success: function(response){
+            if(response.success){
+              window.location.reload()
+            }
+          }
+        })
       }
     });
   }
@@ -322,28 +323,3 @@
   
 
 </script>
-
-{{!-- <nav aria-label="Page navigation example">
-      <ul class="pagination">
-        {{#if (gt currentPage 1)}}
-            <li class="page-item">
-                <a class="page-link" href="?page={{subtract currentPage 1}}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {{/if}}
-        {{#each (range 1 totalPages)}}
-            <li class="page-item {{#if (eq this ../currentPage)}}active{{/if}}">
-                <a class="page-link" href="?page={{this}}">{{this}}</a>
-            </li>
-        {{/each}}
-
-        {{#if (lt currentPage totalPages)}}
-            <li class="page-item">
-                <a class="page-link" href="?page={{add currentPage 1}}" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-        {{/if}}
-      </ul>
-    </nav> --}}

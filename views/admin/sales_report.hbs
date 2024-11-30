@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="/admin/styles/categories.css">
+<link rel="stylesheet" href="/admin/styles/sales_report.css">
 
 <!-- Report -->
 <section class="section-wrapper row p-3 m-0">
@@ -72,6 +72,41 @@
           <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/03e7ee19e122813c19f899876a57aab2dfc33119df9ffa008ae004e95b29bc8d?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="" class="filter-arrow" />
           <ul class="popup-menu">
             <li class="border-bottom">
+              <a href="/admin/sales-report?today=true">
+                <input type="radio" name="report-filter" id="check-filter-none" class="me-2" 
+                {{#isEmptyObject (json filter)}}
+                {{#if filter.today}}checked{{/if}}
+                {{else}}
+                checked
+                {{/isEmptyObject}}>
+                <label>Today</label>
+              </a>
+            </li>
+            <li class="border-bottom">
+              <a href="/admin/sales-report?yesterday=true">
+                <input type="radio" name="report-filter" id="check-filter-pending" class="me-2" {{#if filter.yesterday}}checked{{/if}}>
+                <label>Yesterday</label>
+              </a>
+            </li>
+            <li class="border-bottom">
+              <a href="/admin/sales-report?thisWeek=true">
+                <input type="radio" name="report-filter" id="check-filter-pending" class="me-2" {{#if filter.thisWeek}}checked{{/if}}>
+                <label>This Week</label>
+              </a>
+            </li>
+            <li class="border-bottom">
+              <a href="/admin/sales-report?thisMonth=true">
+                <input type="radio" name="report-filter" id="check-filter-shipped" class="me-2" {{#if filter.thisMonth}}checked{{/if}}>
+                <label>This Month</label>
+              </a>
+            </li>
+            <li class="border-bottom">
+              <a href="/admin/sales-report?thisYear=true">
+                <input type="radio" name="report-filter" id="check-filter-shipped" class="me-2" {{#if filter.thisYear}}checked{{/if}}>
+                <label>This Year</label>
+              </a>
+            </li>
+            <li class="border-bottom">
               <a href="/admin/sales-report?daily=true">
                 <input type="radio" name="report-filter" id="check-filter-none" class="me-2" {{#if filter.daily}}checked{{/if}}>
                 <label>Daily</label>
@@ -105,26 +140,33 @@
       <thead>
         <tr>
           <th><input class="form-check-input" type="checkbox"></th>
-          <th style="--w:150px">Date</th>
-          <th style="--w:150px">Sales Revenue</th>
+          <th style="--w:100px">Order</th>
+          <th style="--w:150px">Customer</th>
+          <th style="--w:100px">Products</th>
           <th style="--w:100px">Tax</th>
           <th style="--w:100px">Discounts</th>
-          <th style="--w:100px">Net Revenue</th>
-          <th style="--w:100px">Orders</th>
-          <th style="--w:150px" class="text-start">Sold items</th>
+          <th style="--w:100px">Total</th>
+          <th style="--w:100px">Payment</th>
+          <th style="--w:100px" class="text-center">Status</th>
         </tr>
       </thead>
       <tbody>
         {{#each report}}
           <tr>
             <td><input class="form-check-input" type="checkbox"></td>
-            <td style="--w:150px" class="text-nowrap">{{this.date}}</td>
-            <td style="--w:150px"><span class="price">{{this.sales_revenue}}</span></td>
-            <td style="--w:100px"><span class="price">{{this.total_tax}}</span></td>
+            <td style="--w:100px" class="text-nowrap">
+              <div class="d-flex flex-column">
+                <span>{{this.order_no}}</span>
+                <span>{{this.date}}</span>
+              </div>
+            </td>
+            <td style="--w:150px"><span>{{this.customer}}</span></td>
+            <td style="--w:100px" class="justify-content-center"><span>{{this.quantity}}</span></td>
+            <td style="--w:100px"><span class="price">{{this.tax}}</span></td>
             <td style="--w:100px"><span class="price">{{this.discounts}}</span></td>
-            <td style="--w:100px"><span class="price">{{this.net_revenue}}</span></td>
-            <td style="--w:100px">{{this.orders}}</td>
-            <td style="--w:150px" class="justify-content-start">{{this.sold_items}}</td>
+            <td style="--w:100px"><span class="price">{{this.order_total}}</span></td>
+            <td style="--w:100px"><span>{{this.payment_method}}</span></td>
+            <td style="--w:100px" class="text-end"><span>{{this.order_status}}</span></td>
           </tr>
         {{/each}}
       </tbody>
@@ -134,27 +176,34 @@
     <div class="pagination-wrapper">
       <div class="status-report">
         <span>
-          {{#if filter.weekly}}Weekly Report
+          {{#if filter.today}}Today's Report
+          {{else if filter.yesterday}}Yesterday's Report
+          {{else if filter.thisWeek}}This Week Report
+          {{else if filter.thisMonth}}This Month Report
+          {{else if filter.thisYear}}This Year Report
+          {{else if filter.daily}}Daily Report
+          {{else if filter.weekly}}Weekly Report
           {{else if filter.monthly}}Monthly Report
           {{else if filter.yearly}}Yearly Report
           {{else if filter.custom}}Custom Date Report
-          {{else}}Daily Report
+          {{else}}Today's Report
           {{/if}}
         </span>
         <span class="devider"></span>
         <p class="m-0 fw-bold me-2">Over All</p>
-        <span><span class="text-black-50">Sales:</span><span class="price ms-1"> {{overAll.overall_sales_revenue}}</span></span>
+        <span><span class="text-black-50">Sold Items:</span><span class="ms-1"> {{total.sold_items}}</span></span>
         <span class="devider"></span>
-        <span><span class="text-black-50">Discounts:</span><span class="price ms-1"> {{overAll.overall_discounts}}</span></span>
+        <span><span class="text-black-50">Discounts:</span><span class="price ms-1"> {{total.discounts}}</span></span>
         <span class="devider"></span>
-        <span><span class="text-black-50">Revenue:</span><span class="price ms-1"> {{overAll.overall_net_revenue}}</span></span>
+        <span><span class="text-black-50">Sales:</span><span class="price ms-1"> {{total.revenue}}</span></span>
         <span class="devider"></span>
-        <span><span class="text-black-50">Orders:</span><span> {{overAll.overall_orders}}</span></span>
+        <span><span class="text-black-50">Orders:</span><span> {{total.count}}</span></span>
         
       </div>
+      
       <div class="paginations">
         <span class="me-2">Rows per page:</span>
-        <form action="/admin/sales-report" id="limit-form" method="get" class="d-inline-flex">
+        <form id="limit-form" method="get" class="d-inline-flex">
           <select class="me-4" name="limit" id="limitSelect">
             <option value="5" {{#if (eq page_limit 5)}} selected {{/if}}>5</option>
             <option value="10"{{#if (eq page_limit 10)}} selected {{/if}}>10</option>
@@ -163,15 +212,14 @@
           </select>
         </form>
         <span class="me-5">{{currentPage}} / {{totalPages}}</span>
-        <a href="{{#if (gt currentPage 1)}}?page={{subtract currentPage 1}}&limit={{page_limit}}{{/if}}" class="me-3">
+        <a class="cursor-pointer me-3 previous" {{!-- href="{{#if (gt currentPage 1)}}?page={{subtract currentPage 1}}&limit={{page_limit}}&{{json2query filter}}{{/if}}"  --}}>
           <i class="las la-angle-left"></i>
         </a>
-        <a href="{{#if (lt currentPage totalPages)}}?page={{add currentPage 1}}&limit={{page_limit}}{{/if}}">
+        <a class="cursor-pointer next" {{!-- href="{{#if (lt currentPage totalPages)}}?page={{add currentPage 1}}&limit={{page_limit}}&{{json2query filter}}{{/if}}" --}}>
           <i class="las la-angle-right"></i>
         </a>
       </div>
     </div>
-
   </div>
 </section>
 
@@ -191,12 +239,56 @@
   })
 
   $('.end-date').on('changeDate',function(e){
-    const url = `/admin/sales-report?custom=true&endtDate=${new Date(e.date).toLocaleDateString().replaceAll('/','-')}&startDate=${$('.date.start-date > input').val()}`
-    window.location.href = url
+
+    //console.log(new Date(e.date) < convertedDate($('.date.start-date > input').val()))
+
+    if(new Date(e.date) > convertedDate($('.date.start-date > input').val())){
+      const url = `/admin/sales-report?custom=true&endtDate=${new Date(e.date).toLocaleDateString().replaceAll('/','-')}&startDate=${$('.date.start-date > input').val()}`
+      window.location.href = url
+    }else{
+      //console.log(new Date(e.date),convertedDate($('.date.start-date > input').val()))
+      if(new Date(e.date) < convertedDate($('.date.start-date > input').val())){
+        Swal.fire({
+          title: 'Invalid Date Range',
+          text: 'End date should be greater than or equal to start date',
+          icon: 'error',
+          confirmButtonText: 'Okay'
+        }).then(() => {
+          $(this).datepicker('setDate',new Date())
+          dateReset = true;
+        })
+      }
+      
+    }
+  })
+
+  function convertedDate(date){
+    const [day, month, year] = date.split('-');
+    return new Date(year, month-1, day);
+  }
+
+  const currentPage = {{currentPage}}
+  const totalPages = {{totalPages}}
+  const filter = {{{json filter}}}
+
+  $('.previous').on('click',function(){
+    if(currentPage > 1){
+      const url = `/admin/sales-report?{{{json2query filter}}}&page=${currentPage - 1}&skip={{skip}}&limit={{page_limit}}`
+      window.location.href = url
+    }
+  })
+
+  $('.next').on( 'click',function(){
+    if(currentPage < totalPages){
+      const url = `/admin/sales-report?{{{json2query filter}}}&page=${currentPage + 1}&skip={{skip}}&limit={{page_limit}}`
+      window.location.href = url
+    }
   })
 
   // limit selector handling
   $('#limitSelect').on('change', function (){
-    $('#limit-form').submit()
+    const url = `/admin/sales-report?{{{json2query filter}}}&page=${currentPage}&skip={{skip}}&limit=${$(this).val()}`
+    window.location.href = url
   })
+
 </script>

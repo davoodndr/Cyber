@@ -82,7 +82,7 @@
                 </div>
               </div>
             </td>
-            <td style="--w:150px">{{formatDate this.order_date 'D-M-YYYY'}}</td>
+            <td style="--w:150px">{{formatDate this.createdAt 'D-M-YYYY'}}</td>
             <td style="--w:150px">{{this.billing_address.fullname}}</td>
             <td style="--w:150px">
               <div class="status small 
@@ -99,8 +99,12 @@
             </td>
             <td style="--w:150px">{{this.payment_method}}</td>
             <td style="--w:150px">
+
               <div class="action-wrapper">
-                <form id="delete-form" action="/admin/products/{{this.product_slug}}/delete" method="get"></form>
+                <a href="/admin/view-order?id={{this._id}}" {{!-- id="edit-btn" onclick=""  --}}class="action-btn">
+                  <div class="masked-div" 
+                  style="--mask:url(/admin/images/icons/view_order.svg);--w:24px;--h:24px;--mask-bg:black"></div>
+                </a>
                 <div class="action-btn">
                   <svg width="4" height="17" viewBox="0 0 4 17" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2 16.98C1.45 16.98 0.979167 16.7841 0.5875 16.3925C0.195833 16.0008 0 15.53 0 14.98C0 14.43 0.195833 13.9591 0.5875 13.5675C0.979167 13.1758 1.45 12.98 2 12.98C2.55 12.98 3.02083 13.1758 3.4125 13.5675C3.80417 13.9591 4 14.43 4 14.98C4 15.53 3.80417 16.0008 3.4125 16.3925C3.02083 16.7841 2.55 16.98 2 16.98ZM2 10.98C1.45 10.98 0.979167 10.7841 0.5875 10.3925C0.195833 10.0008 0 9.52998 0 8.97998C0 8.42998 0.195833 7.95915 0.5875 7.56748C0.979167 7.17581 1.45 6.97998 2 6.97998C2.55 6.97998 3.02083 7.17581 3.4125 7.56748C3.80417 7.95915 4 8.42998 4 8.97998C4 9.52998 3.80417 10.0008 3.4125 10.3925C3.02083 10.7841 2.55 10.98 2 10.98ZM2 4.97998C1.45 4.97998 0.979167 4.78415 0.5875 4.39248C0.195833 4.00081 0 3.52998 0 2.97998C0 2.42998 0.195833 1.95915 0.5875 1.56748C0.979167 1.17581 1.45 0.97998 2 0.97998C2.55 0.97998 3.02083 1.17581 3.4125 1.56748C3.80417 1.95915 4 2.42998 4 2.97998C4 3.52998 3.80417 4.00081 3.4125 4.39248C3.02083 4.78415 2.55 4.97998 2 4.97998Z" fill="currentColor"/>
@@ -109,33 +113,33 @@
                     <li>
                       <a href="/admin/change-status/{{this._id}}/confirmed">
                         <i class="las la-check-circle fs-4"></i>
-                        <span>Confirm</span>
+                        <span>Confirmed</span>
                       </a>
                     </li>
                     <li>
                       <a href="/admin/change-status/{{this._id}}/shipped">
                         <i class="las la-shipping-fast"></i>
-                        <span>Ship</span>
+                        <span>Shipped</span>
                       </a>
                     </li>
                     <li>
                       <a href="/admin/change-status/{{this._id}}/delivered">
                         <img src="/admin/images/icons/order-delivered.svg" alt="">
-                        <span>Deliver</span>
+                        <span>Delivered</span>
                       </a>
                     </li>
                     <li>
-                      <a href="/admin/change-status/{{this._id}}/cancelled">
+                      <a href="/admin/cancel-order/{{this._id}}">
                         <img src="/admin/images/icons/order-cancelled.svg" alt="">
-                        <span>Cancel</span>
+                        <span>Cancelled</span>
                       </a>
                     </li>
-                    <li>
+                    {{!-- <li>
                       <a href="/admin/change-status/{{this._id}}/return">
                         <img src="/admin/images/icons/order-return-color.svg" alt="">
-                        <span>Return</span>
+                        <span>Returned</span>
                       </a>
-                    </li>
+                    </li> --}}
                   </ul>
                 </div>
               </div>

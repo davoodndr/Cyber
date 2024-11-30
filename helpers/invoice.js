@@ -149,7 +149,7 @@ function generateInvoiceTable(doc, invoice) {
     "",
     "Discounts",
     "",
-    formatCurrency(invoice.discounts)
+    '-'+formatCurrency(invoice.discounts)
   );
 
   const duePosition = discountPosition + 25;

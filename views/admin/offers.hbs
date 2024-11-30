@@ -227,14 +227,10 @@
               </div>
               <div class="col-md-6">
                 <div class="form-group mb-2">
-                  <label for="review-title">Discount value<span class="text-danger fs-6">*</span></label>
+                  <label for="review-title">Discount value (percentage)<span class="text-danger fs-6">*</span></label>
                   <div class="input-group">
                     <input type="number" class="form-control {{#if offer_info.discount_value}}is-invalid{{/if}}" style="width: 30%;" 
-                      value="{{offer_values.discount_value}}" name="discount_value" placeholder="Enter discount value">
-                    <select name="discount_type" id="" class="form-select w-custom dropdown-toggle" data-bs-toggle="dropdown"  aria-expanded="false">
-                      <option value="fixed">Fixed Amount</option>
-                      <option value="percentage">Percentage</option>
-                    </select>
+                      value="{{offer_values.discount_value}}" name="discount_value" placeholder="Max. up to 10%">
                     {{#if offer_info.discount_value}}<span class="invalid-feedback">{{offer_info.discount_value}}</span>{{/if}}
                   </div>
                 </div>
@@ -303,7 +299,7 @@
                   <label for="review-title">Start Date<span class="text-danger fs-6">*</span></label>
                   <div class="input-group date">
                     <input type="text"  class="form-control {{#if offer_info.start_date}}is-invalid{{/if}}" name="start_date" 
-                      value="{{offer_values.start_date}}"placeholder="Pick offer start date" readonly>
+                      value="{{offer_values.start_date}}"placeholder="Pick offer start date" disabled>
                     <span class="input-group-text input-group-addon cursor-pointer">
                       <img src="/admin/images/icons/calendar.svg" alt="">
                     </span>
@@ -330,10 +326,6 @@
                   <div class="input-group">
                     <input type="number" class="form-control {{#if offer_info.discount_value}}is-invalid{{/if}}" style="width: 30%;" 
                       value="{{offer_values.discount_value}}" name="discount_value" placeholder="Enter discount value">
-                    <select name="discount_type" id="" class="form-select w-custom dropdown-toggle" data-bs-toggle="dropdown"  aria-expanded="false">
-                      <option value="fixed">Fixed Amount</option>
-                      <option value="percentage">Percentage</option>
-                    </select>
                     {{#if offer_info.discount_value}}<span class="invalid-feedback">{{offer_info.discount_value}}</span>{{/if}}
                   </div>
                 </div>
@@ -392,6 +384,9 @@
   if(status){
     if(status == 400){
       let myModal = new bootstrap.Modal($('#addOffer'))
+      myModal.show()
+    }else if(status == 401){
+      let myModal = new bootstrap.Modal($('#editOffer'))
       myModal.show()
     }else{
       
@@ -491,18 +486,12 @@
     });
   }
 
-  // json from db to array
-  {{!-- let products = '{{json products}}'.replace(/&quot;/ig,'"').replace(/\\/ig,'\\').replace(/[\x00-\x1F\x7F]/g, ''); --}}
-
   /* edit modal popup */
 	function openEditModal(current){
 
     if(typeof current === 'string' && current.length > 0) current = JSON.parse(current)
-    const cats = '{{{json categories}}}'
-    const prs = '{{{json products}}}'
-    let categories = [], products = []
-    if(cats) categories = JSON.parse(cats)
-    if(prs) products = JSON.parse(prs)
+    const categories = {{{json categories}}}
+    const products = {{{json products}}}
 
     let applied_items = []
     if(current.applied_products && current.applied_products.length){
@@ -536,7 +525,7 @@
         $('#select-items').append(opt)
       })
     }
-
+    
     $('#select-items').val(applied_items).trigger('change') 
 
 
@@ -560,7 +549,6 @@
     })
   })
 
-  
   $('#btn-update-offer').click(function (){
     const applied_items = $('#select-items').val().length === 0 ? '&applied_items=' : ''
     let data = `${$('#update-offer-form').serialize()}${applied_items}`
@@ -577,6 +565,35 @@
     })
   })
 
+  $('.date').on('changeDate',function(e){
+    const selectedDate = new Date(e.date)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0);
+    if(selectedDate < today){
+      Swal.fire({
+        title: 'Error',
+        text: 'Date cannot be in the past',
+        icon: 'error',
+        confirmButtonText: 'Okay'
+      }).then(() => {
+        $(this).find('input').val(formatDate(today))
+      })
+    }
+  })
+
+  $('#addOffer .date').eq(1).on('changeDate',function(e){
+    const endDate = new Date(e.date)
+    const startDate = new Date(convertedDate($('#addOffer .date').eq(0).find('input').val()))
+    if(startDate && endDate < startDate){
+      Swal.fire({
+        title: 'Error',
+        text: 'Date cannot be in the past',
+        icon: 'error',
+      }).then(() => {
+        $(this).find('input').val(formatDate(startDate))
+      })
+    }
+  })
   // limit selector handling
   $('#limitSelect').on('change', function (){
     $('#limit-form').submit()

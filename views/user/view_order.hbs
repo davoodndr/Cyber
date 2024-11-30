@@ -51,7 +51,7 @@
 						  </small>
 					  </div>
 				  </div>
-				  <div class="d-flex align-items-start gap-2">
+				  <div class="d-flex align-items-start gap-2 {{#if (eq order.order_status 'cancelled')}}disable-element{{/if}}">
 						<button class="btn btn-outline-secondary btn-sm">
 							Cancel Order
 						</button>
@@ -70,14 +70,16 @@
 										<div class="col-md-8 d-flex gap-3">
 											<img src="{{this.thumb}}" alt="{{this.product_name}}" width="60" height="60" class="rounded">
 											<div class="d-inline-flex align-items-center h-auto">
-													<h6 class="mb-1">{{this.product_name}}</h6>
+													<h6 class="mb-1 capitalize {{#if (eq this.item_status 'cancelled')}}line-through{{/if}}">
+														{{this.product_name}}
+													</h6>
 													{{!-- <small class="text-muted">Color: Deep Purple</small> --}}
 											</div>
 										</div>
 										<div class="col-md-4 d-flex justify-content-between align-items-center">
-											<span class="price">{{this.price}}</span>
-											<span class="px-3">{{this.quantity}}</span>
-											<span class="fw-bold price">{{this.item_total}}</span>
+											<span class="price {{#if (eq this.item_status 'cancelled')}}line-through{{/if}}">{{this.price}}</span>
+											<span class="px-3 {{#if (eq this.item_status 'cancelled')}}line-through{{/if}}">{{this.quantity}}</span>
+											<span class="fw-bold price {{#if (eq this.item_status 'cancelled')}}line-through{{/if}}">{{this.item_total}}</span>
 										</div>
 								</div>
 						</div>
@@ -99,7 +101,7 @@
 						  <span class="price">{{order.tax}}</span>
 					  </div>
 					  <div class="d-flex align-items-center justify-content-between mb-2">
-						  <span class="text-muted">Estimated Shipping & Handling</span>
+						  <span class="text-muted">Estimated Shipping &amp; Handling</span>
 						  <span class="price">{{order.shipping_charge}}</span>
 					  </div>
 					  <div class="d-flex align-items-center justify-content-between mb-3">
@@ -118,7 +120,7 @@
 			  </div>
 
 			  <!-- Tracking Info -->
-			  <div class="card border-0">
+			  <div class="card border-0 mb-4">
 				  <div class="card-body p-0">
 					  <div class="row gx-4">
 						  <div class="col-md-6">
@@ -126,17 +128,17 @@
 									<h6 class="text-muted mb-3">Applied Coupons &amp; Offers</h6>
 									<small class="d-block">Offers: 
 										{{#each order.offers}}
-										<span class="mx-1">{{this.offer_code}},</span>
+										<span class="mx-1">{{this}},</span>
 										{{else}}
 										<span class="mx-1">None Applied</span>
 										{{/each}}
 									</small>
-									<small>Coupons: 
-										{{#each order.coupons}}
-                    <span class="mx-1">{{this.coupon_code}},</span>
+									<small>Coupon: 
+										{{#if order.coupon}}
+                    <span class="mx-1">{{order.coupon.coupon_code}}</span>
 										{{else}}
 										<span class="mx-1">None Applied</span>
-                    {{/each}}
+                    {{/if}}
 									</small>
 								</div>
 						  </div>
@@ -166,6 +168,59 @@
 					  </div>
 				  </div>
 			  </div>
+
+			
+				<!-- Order Summary after cancellation-->
+				{{#if (and cancelledSummery (neq order.order_status 'cancelled'))}}
+			  <div class="card mb-4">
+					<div class="card-header">
+						<h6 class="text-black-50 m-0">Order Summery after cancelleation</h6>
+					</div>
+				  <div class="card-body">
+					  <div class="d-flex align-items-center justify-content-between mb-2">
+						  <div>
+							  <span class="fw-bold">Subtotal</span>
+							  <span class="text-muted">({{cancelledSummery.orderItemsCount}} Items)</span>
+						  </div>
+						  <span class="price">{{cancelledSummery.order_subtotal}}</span>
+					  </div>
+					  <div class="d-flex align-items-center justify-content-between mb-2">
+						  <span class="text-muted">Estimated Tax</span>
+						  <span class="price">{{cancelledSummery.tax}}</span>
+					  </div>
+					  <div class="d-flex align-items-center justify-content-between mb-2">
+						  <span class="text-muted">Estimated Shipping &amp; Handling</span>
+						  <span class="price">{{cancelledSummery.shipping_charge}}</span>
+					  </div>
+					  <div class="d-flex align-items-center justify-content-between mb-3">
+						  <span class="text-muted">Discounts</span>
+							<div>
+								-
+								<span class="price text-danger">{{cancelledSummery.discounts}}</span>
+							</div>
+					  </div>
+					  <hr>
+					  <div class="d-flex flex-column align-items-center justify-content-between">
+							{{#if (gt cancelledSummery.cancelledRefunded 0)}}
+						  <div class="d-flex w-100 align-items-center justify-content-between mb-3">
+								<span class="text-muted">Refunded</span>
+						  	<span>-<span class="fw-bold price text-muted">{{cancelledSummery.cancelledRefunded}}</span></span>
+							</div>
+							{{/if}}
+							{{#if (gt cancelledSummery.cancelledNotRefunded 0)}}
+							<div class="d-flex w-100 align-items-center justify-content-between mb-3">
+								<span class="text-muted">Not Refunded</span>
+						  	<span>-<span class="fw-bold price text-muted">{{cancelledSummery.cancelledNotRefunded}}</span></span>
+							</div>
+							{{/if}}
+							<div class="d-flex w-100 align-items-center justify-content-between">
+								<span class="fw-bold">Total</span>
+						  	<span class="fw-bold price">{{cancelledSummery.order_total}}</span>
+							</div>
+					  </div>
+				  </div>
+			  </div>
+				{{/if}}
 
 		  </div>
 	  </div>
