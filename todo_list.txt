@@ -1,9 +1,6 @@
 
 #### - FRONT END
 
-show cancelled item detail in orderpage
-add review not working
-change product cards in all places
 correct insufficient balance on wallet on making order - do open razorpay
 
 decrease stock only on place order, not add to cart
@@ -14,8 +11,7 @@ enable buynow
 
 #### - BACK END
 
-correct report view on partial cancelled orders
-downloads, sort
+sort
 Product detail page
 user detail page
 search filter
