@@ -59,13 +59,10 @@ exports.getDashboard = async (req, res) => {
   dataFilter.limit = parseInt(limit)
 
   const data = await getSalesReport(dataFilter,null)
-  const filtered = data.filtered.slice(skip, skip+limit)
+  const filtered = data.filtered.slice(skip, parseInt(skip)+parseInt(limit))
   const orders = data.total[0]
   const actualOrders = await getSalesReport(dataFilter,{payment_status:'paid',order_status:{$nin:['cancelled','return']}})
-  const cancelledOrders = await getSalesReport(dataFilter,{order_status:{$in:['cancelled','return']}})
-  
-  console.log(cancelledOrders)
-  
+
   const topSellings = await getTopSellings()
   const top_brands = topSellings[0].top_brands
   const top_categories = topSellings[0].top_categories

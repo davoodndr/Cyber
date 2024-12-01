@@ -522,7 +522,6 @@ exports.placeOrder = async (req, res) => {
   orderData.shipping_charge = shippingCharge;
   const order = new Order(orderData);
 
-  //console.log('new_order_id',order.order_no)
 
   let result, transactions = {};
   if(payment_method === 'razorpay') {
@@ -830,7 +829,6 @@ exports.cancelItem = async (req, res) => {
   let reducedDiscount = item[0].coupon_amount
   let returnAmount = itemToCancel.item_total + itemToCancel.item_tax - itemToCancel.offer_amount
 
-  //console.log(itemToCancel)
 
   if(item[0].coupon_amount > 0){
 
@@ -871,7 +869,7 @@ exports.cancelItem = async (req, res) => {
     }
   })
 
-  /* if(order.payment_status === 'paid'){
+  if(order.payment_status === 'paid'){
 
     await Promise.all([
 
@@ -898,7 +896,7 @@ exports.cancelItem = async (req, res) => {
     }).catch(err => {
       console.log(err)
     })
-  } */
+  }
 }
 
 exports.downloadInvoice = async (req,res) => {

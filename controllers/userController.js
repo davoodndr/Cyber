@@ -16,7 +16,7 @@ const moment = require('moment');
 
 exports.getHome = async (req, res) => {
 
-  req.session.user = await User.findById('6711c46d731d478ccdad43f6'/* '6712192a397dcef4eb7ea766' */);
+  //req.session.user = await User.findById('6711c46d731d478ccdad43f6'/* '6712192a397dcef4eb7ea766' */);
   const user = req.session.user;
   constants.isLogged = user ? true : false;
 

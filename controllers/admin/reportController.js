@@ -15,7 +15,7 @@ exports.getReport = async (req, res) => {
   dataFilter.limit = parseInt(limit)
 
   const data = await getSalesReport(dataFilter,null)
-  const report = data.filtered.slice(skip, skip+limit)
+  const report = data.filtered.slice(skip, parseInt(skip)+parseInt(limit))
   const total = data.total[0]
 
   const count = total.count
