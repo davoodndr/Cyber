@@ -591,6 +591,14 @@
 
     // Wishlist
     function addOrRemoveWishlist(container,index,id, textChange=null){
+
+      const user = {{#if isLogged}} {{isLogged}} {{else}} undefined {{/if}};
+
+      if(!user){
+        Toast(2500,'error','Please login to add to Wishlist')
+        return false
+      }
+
       $.ajax({
         type: 'POST',
         url: '/add-to-wishlist',

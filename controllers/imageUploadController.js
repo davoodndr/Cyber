@@ -78,7 +78,7 @@ exports.resizeImages = async (req, res, next) => {
         writeImage(file, `${dir}/${newFilename}`)
         const protocol = req.protocol;
         const host = req.get('host');
-        const link = `${protocol}://${host}/admin/images/uploads/${section}/${slug}/${newFilename}`
+        const link = `/admin/images/uploads/${section}/${slug}/${newFilename}`
         req.body.images.push(link);
         
         //const newFilename = isExists ? filename+'.jpg' : `${Date.now()}-${filename}.jpg`;

@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const fn = require('../helpers/functions');
 const constants = require('../constants/constants')
+require('dotenv').config()
 
 const getProducts = async (req, res) => {
   const {from} = req.query;
@@ -18,7 +19,7 @@ const getProducts = async (req, res) => {
     el.images.forEach(img => {
       if(!img.match('/products')){
         let nam = img.split('-').pop()
-        let imgNew = `http://localhost:8080/admin/images/uploads/products/${el.product_slug}/${nam}`
+        let imgNew = `/admin/images/uploads/products/${el.product_slug}/${nam}`
         images.push(imgNew)
       }
     })

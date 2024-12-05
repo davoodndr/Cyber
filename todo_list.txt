@@ -15,3 +15,6 @@ sort
 Product detail page
 user detail page
 search filter
+
+mongodb://localhost:27017/cyber_ecom
+mongodb+srv://davoodhakkimndr:<db_password>@cyber-ecom-cluster.fncvr.mongodb.net/?retryWrites=true&w=majority&appName=cyber-ecom-cluster/cyber_ecom

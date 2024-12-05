@@ -6,6 +6,7 @@ const session = require('express-session');
 const nocache = require('nocache');
 const cors = require('cors');
 const passport = require('./db/passport')
+const path = require('path');
 const _PORT = process.env.PORT;
 
 const hbs_helpers = require('./helpers/hbs_helpers')
@@ -22,7 +23,7 @@ connectDB()
 app.use(nocache())
 app.use(cors())
 app.set('view engine','hbs')
-app.use(express.static('public'))
+app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
   secret: process.env.SESSION_SECRET,
