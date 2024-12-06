@@ -7,11 +7,13 @@
     <h4>Sales Report ({{total_items}})</h4>
     <div class="d-inline-flex download-btn-wrapper">
       <a href="/admin/download-report-pdf?{{json2query filter}}&limit={{page_limit}}&page={{currentPage}}&startDate={{filter.startDate}}&endDate={{filter.endDate}}" class="download-btn-pdf">
-        <img src="/admin/images/icons/import.svg" alt="">
+        <div class="masked-div me-1" 
+					style="mask-image: url(/admin/images/icons/import.svg); --w:24px; --h:24px; --mask-bg:black;"></div>
         Download PDF
       </a>
       <a href="/admin/download-report-excel?{{json2query filter}}&limit={{page_limit}}&page={{currentPage}}&startDate={{filter.startDate}}&endDate={{filter.endDate}}" class="download-btn-excel">
-        <img src="/admin/images/icons/import.svg" alt="">
+        <div class="masked-div me-1" 
+					style="mask-image: url(/admin/images/icons/import.svg); --w:24px; --h:24px; --mask-bg:black;"></div>
         Download EXCEL
       </a>
     </div>

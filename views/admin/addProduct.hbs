@@ -9,17 +9,14 @@
       <a href="/admin/products?from=add" class="create-btn me-2">
         Back
       </a>
-      {{!-- <button class="create-btn me-2">
-        Save Draft
-      </button> --}}
-      <button {{!-- type="submit" form="add-product-form" --}} class="create-btn publish-btn">
+      <button  class="create-btn publish-btn">
         Publish
       </button>
     </div>
   </div>
   
-  <div class="col-12 info-box {{!-- overflow-auto --}}">
-    <form {{!-- action="/admin/publish-product" --}} id="add-product-form" {{!-- method="post" --}} {{!-- enctype="multipart/form-data" --}}>
+  <div class="col-12 info-box ">
+    <form  id="add-product-form">
 
       <div class="row">
 
@@ -198,12 +195,6 @@
                   value="{{product_values.original_price}}" id="original-price" placeholder="Enter original price">
                 {{#if product_info.original_price}}<span class="invalid-feedback">{{product_info.original_price}}</span>{{/if}}
               </div>
-              {{!-- <div class="mb-3">
-                <label for="selling-price" class="form-label">Selling Price</label>
-                <input type="number" name="selling_price" class="form-control {{#if product_info.selling_price}}is-invalid{{/if}}"
-                  value="{{product_values.selling_price}}" id="selling-price" placeholder="Enter selling price">
-                {{#if product_info.selling_price}}<span class="invalid-feedback">{{product_info.selling_price}}</span>{{/if}}
-              </div> --}}
               <div class="mb-3">
                 <label for="stock" class="form-label">Stock</label>
                 <input type="number" name="stock" class="form-control {{#if product_info.stock}}is-invalid{{/if}}"
@@ -242,104 +233,7 @@
             </div>
           </div>
 
-          {{!-- <!-- Variants Type -->
-          <div class="card mb-4">
-            <div class="card-header d-flex align-items-center justify-content-between">
-              <h5>Variants Type</h5>
-              <a id="btn-add-type" class="btn text-primary">
-                <i class="las la-plus"></i> Add Type
-              </a>
-            </div>
-            <div class="card-body var-type-table d-flex flex-column justify-content-between">
-
-              <div class="list-group w-100 mb-2">
-                {{!-- <a class="list-group-item d-flex align-items-center justify-content-between">
-                  <div class="d-inline-flex me-2">
-                    <input class="form-check-input me-3" id="check-var-type" type="checkbox">
-                  </div>
-                  <div class="d-inline-flex me-2">
-                    <input type="text" value="" class="form-control" placeholder="eg: Size">
-                  </div>
-                  <div class="d-inline-flex me-2">
-                    <input type="text" value="" class="form-control" placeholder="eg: XL">
-                  </div>
-                  <div class="d-inline-flex">
-                    <a class="btn btn-light border" id="">
-                      <i class="lar la-trash-alt"></i>
-                    </a>
-                  </div>
-                </a> --}}
-              </div>
-            </div>
-          </div> --}}
-
         </div>
-
-        <!-- Add Varaiant -->
-        {{!-- <div class="col-12 mb-5">
-          <div class="card">
-            <div class="card-header d-flex align-items-center justify-content-between">
-              <h5>Variants</h5>
-              <a class="btn text-primary" id="btn-add-variant">
-                <i class="las la-plus"></i> Add Variant
-              </a>
-            </div>
-            <div class="card-body p-0">
-              <table class="table add-variant-table">
-                <thead>
-                  <tr>
-                    <th><input type="checkbox" class="form-check-input"></th>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Option</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{!-- <tr>
-                    <td><input type="checkbox" class="form-check-input"></td>
-                    <td class="">
-                      <a class="btn btn-light border text-primary">
-                        <i class="las la-plus"></i>
-                      </a>
-                    </td>
-                    <td>
-                      <div class="">
-                        <select name="variants[0][var_name]" class="form-select" id="var-name-select">
-                          <option selected value="">Select Name</option>
-                        </select>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="">
-                        <select name="variants[0][var_option]" class="form-select" id="var-option-select">
-                          <option selected value="">Select Option</option>
-                        </select>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="">
-                        <input type="text" name="variants[0][var_price]" class="form-control" placeholder="Price">
-                      </div>
-                    </td>
-                    <td>
-                      <div class="">
-                        <input type="text" name="variants[0][var_count]" class="form-control" placeholder="Count">
-                      </div>
-                    </td>
-                    <td class="px-3">
-                      <a class="btn btn-light border" id="btn-del-variant">
-                        <i class="lar la-trash-alt"></i>
-                      </a>
-                    </td>
-                  </tr> --}}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div> --}}
 
       </div>
     </form>
@@ -349,7 +243,6 @@
 
 <script>
 
-  console.log('info',['{{{json product_info}}}','{{{json product_values}}}'])
   
   /* File input */
   let cropper;
@@ -372,8 +265,6 @@
                     <img src="${event.target.result}" alt="">
                   </div>`)
 
-            //showCropper(event,i)
-
             // Save image file for later use
             file.index = i
             imageFiles.push(file);
@@ -394,7 +285,7 @@
         return response.blob()
       }).then(blob => {
         const fileFormServer = new File([blob],src.split('/').pop());
-        //$('#cropper').attr('src',URL.createObjectURL(fileFormServer))
+        
         fileFormServer.index = ind
         imageFiles.push(fileFormServer)
       })
@@ -473,7 +364,7 @@
 
   // remove iamge & thumbnail from board on delete click
   $('.media-thumb-container').on('click','div.media-thumb-wrapper a', function(e) {
-    //console.log($(this).closest('div.media-thumb-wrapper'))
+    
     e.stopPropagation();
     const index = $(this).parent().index()
     imageFiles.splice(index,1);
@@ -506,7 +397,7 @@
       $(frm).find('tr').remove()
       
       specs.forEach((el,i) => {
-        //console.log('test',el)
+        
         $(frm).append(
         `
           <tr>
@@ -808,7 +699,7 @@
 
   // remove variant table row
   $('.add-variant-table tbody').on('click','a', function(e){
-    //let ind = $(e.delegateTarget.children).index(e.currentTarget)
+    
     $(this).closest('tr').remove();
   })
 
@@ -824,12 +715,13 @@
 
     let data = new FormData(document.getElementById('add-product-form'))
     croppedFiles.forEach(file => {
-      //console.log(file)
+      
       data.append('images',file)
     })
 
     const slug = $('#slugInput').val()
 
+    $('.loader-bg').css('display','flex')
     await fetch(`/admin/publish-product?section=products`, {
       method: 'POST',
       body: data,
@@ -841,7 +733,7 @@
         text: res.msg,
         icon: res.icon,
       }).then(async ()=>{
-        
+        $('.loader-bg').css('display','flex')
         if(res.status == 201){
           croppedFiles = []
         }
@@ -849,57 +741,11 @@
         await fetch(`/admin/products/clear-session/${res.status}`)
           .then(resp => resp.json()).then(resp => window.location.reload())
       });
-    }).catch(err => 
+    }).catch(err =>{
+      $('.loader-bg').css('display','flex')
       console.log(err)
-    );
-      
-      /*try{
-        const response = await fetch(`/admin/upload-product-images`, {
-          method: 'POST',
-          body: data,
-          
-        }).then(res => {
-          console.log(res) 
-          return res.json()
-        }).then(data =>   {
-          console.log(data)
-          if(data.status != 200){
-            Swal.fire({
-              title: data.title,
-              text: data.msg,
-              icon: data.icon,
-              confirmButtonText: 'Ok'
-            })
-          }
-          $('#add-product-form').submit()
-        });
-      }catch(e){
-        console.log(e)
-      }*/
-
-  })
-
-
-  /* SUBMIT */
-
-  /*const status = '{{product_info.status}}'
-  console.log('test', status)
-
-  // show actions on statuses
-  if(status){
-    Swal.fire({
-      title: "{{product_info.title}}",
-      text: '{{product_info.msg}}',
-      icon: "{{product_info.icon}}"
-    }).then(()=>{
-      $.ajax({
-          type: 'GET',
-          url: `/admin/products/clear-session`,
-          success: function(msg) {
-            //$('#add-product-form').trigger('reset') not working
-          }
-      });
     });
-  }*/
+      
+  })
 
 </script>

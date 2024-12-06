@@ -13,7 +13,7 @@ const {uploadImages, resizeImages} = require('../controllers/imageUploadControll
 /* Admin */
 router.get('/login',middleware.isLogin,adminController.getLogin)
 router.post('/doLogin',adminController.doLogin)
-router.get('/dashboard',middleware.checkSession,adminController.getDashboard)
+router.get('/dashboard'/* ,middleware.checkSession */,adminController.getDashboard)
 router.get('/logout',middleware.checkSession,adminController.logout)
 
 /* Users */

@@ -88,6 +88,14 @@ exports.getDashboard = async (req, res) => {
     final = final.slice(0,6)
   }
 
+  const chartData = {
+    validOrders: await getReport(dataFilter,{payment_status:'paid',order_status:{$nin:['cancelled','return']}}),
+    cancelledOrdes: await getReport(dataFilter,{order_status: {$in:["cancelled","return"]}}),
+    pendingOrders: await getReport(dataFilter,{payment_status:'unpaid',order_status:"pending"}),
+  }
+
+  //console.log(chartData)
+
   res.render('admin/dashboard',{
     pageName: 'dashboard',
     data: req.session.info,
@@ -97,8 +105,159 @@ exports.getDashboard = async (req, res) => {
     top_brands,
     top_products:final,
     top_categories,
-    isAdmin:true
+    isAdmin:true,
+    chartData
   })
+}
+
+const getReport = async function(dataFilter, orderType) {
+  let {startDate,endDate, page, skip, limit, ...filter} = dataFilter
+  let match = {}, projection = {},group = {_id:null}
+  let dateFormat = 'DD-MM-YYYY'  // for foramt graph
+  let format = 'DD-MM-YYYY'
+
+
+  //default assign
+  filter = Object.keys(filter).length ? filter : {today:true}
+
+  if(filter.today){
+    startDate = moment(),endDate = moment()
+  }
+  if(filter.daily || filter.weekly || filter.monthly || filter.yearly){
+    startDate = null
+    endDate = moment()
+  }
+  if(filter.yesterday){
+    startDate = moment().subtract(1,'days')
+    endDate = moment().subtract(1,'days')
+  }
+  moment.updateLocale('en', {
+    week: { dow: 0 } // dow: 0 means Sunday is the first day of the week
+  });
+  if(filter.thisWeek){
+    startDate = moment().startOf('week')
+    endDate = moment().endOf('week')
+    format = 'DD ddd'
+  }
+  if(filter.thisMonth){
+    startDate = moment().startOf('month')
+    endDate = moment().endOf('month')
+  }
+  if(filter.thisYear){
+    startDate = moment().startOf('year')
+    endDate = moment().endOf('year')
+    format = 'MMM'
+  }
+
+  // generally projuction take day
+  
+  orderType ? match = orderType : {};
+
+  if(startDate && endDate){
+    startDate = moment(startDate, dateFormat).startOf('day').toDate();
+    endDate = moment(endDate,dateFormat).endOf('day').toDate()
+    match.createdAt = { $gte: startDate, $lte: endDate };
+
+    if(moment(endDate).diff(moment(startDate),'days') === 0){
+      projection = {date: {$dateToString: { format: "%H", date: "$createdAt", timezone: "Asia/Kolkata" } } }
+      group._id = "$date"
+      format = 'hh A'
+      dateFormat = "hh A"
+    }
+  }
+
+  if(filter.thisYear){
+    projection = {month: {$dateToString: { format: "%Y-%m", date: "$createdAt", timezone: "Asia/Kolkata" } }},
+    group._id = "$month"
+    dateFormat = "YYYY-MM"
+  }
+
+  if(filter.thisMonth || filter.weekly){
+    projection = {date: {$dateToString: { format: "%Y-W%U", date: "$createdAt", timezone: "Asia/Kolkata" } }},
+    group._id = "$date"
+    dateFormat = 'YYYY-[W]ww'
+    format = '[W-]ww'
+  }
+
+  if(filter.daily || filter.thisWeek || filter.custom){
+    projection = {date: {$dateToString: { format: "%d-%m-%Y", date: "$createdAt", timezone: "Asia/Kolkata" } }}
+    group._id = "$date"
+  }
+
+  if(filter.monthly){
+    projection = {date: {$dateToString: { format: "%Y-%m", date: "$createdAt", timezone: "Asia/Kolkata" } }},
+    group.date = { $first: "$date"}
+    format = 'YYYY-MMM'
+  }
+
+  if(filter.yearly){
+    projection = {date: {$dateToString: { format: "%Y", date: "$createdAt", timezone: "Asia/Kolkata" } }},
+    group.date = { $first: "$date"}
+    format = 'YYYY'
+  }
+
+  const result = await Order.aggregate([
+    { $match: {...match}},
+    { $project: {
+        ...projection, order_total:1,
+      }
+    },
+    {
+      $group: {
+        ...group, 
+        revenue:{$sum:"$order_total"},
+      }
+    },
+    {
+      $sort: { _id: 1}
+    }
+  ])
+
+  const dates = [];
+  const currentYear = new Date().getFullYear();
+
+  if(filter.thisYear){
+    for (let month = 0; month < 12; month++) {
+      const monthStr = `${currentYear}-${String(month + 1).padStart(2, '0')}`;
+      dates.push(monthStr);
+    }
+  }
+
+  if(filter.thisMonth){
+    for (let i = 1; i < 5; i++) {
+      result.forEach(item => {
+        let startOfWeek = moment(item._id + '-1', "YYYY-[W]WW-D");
+        let weekOfMonth = Math.ceil(startOfWeek.date() / 7);
+        item._id = `${currentYear}-0${weekOfMonth}`
+      })
+      dates.push(`${currentYear}-0${i}`);
+    }
+  }
+
+  if(filter.thisWeek){
+    for (let day = 1; day <= 7; day++) {
+      const dayOfWeek = moment().weekday(day - 1).format(dateFormat);
+      dates.push(dayOfWeek);
+    }
+  }
+
+
+  if(filter.today || filter.yesterday){
+    for (let hr = 0; hr < 24; hr++) {
+      dates.push(`${hr}`);
+    }
+  }
+
+  const mergedData = dates.map(date => {
+    const sales = result.find(item => item._id === date);
+    date = moment(date,dateFormat).format(format)
+    return {
+      date,
+      revenue: sales ? sales.revenue.toFixed(2) : 0,
+    };
+  });
+
+  return mergedData
 }
 
 const getSalesReport = async function(dataFilter, orderType){

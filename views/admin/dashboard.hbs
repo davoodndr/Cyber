@@ -6,23 +6,6 @@
 					<h2 class="content-title card-title">Dashboard </h2>
 					<p>Whole data about your business here</p>
 			</div>
-			<div class="btn-group">
-				<button type="button" class="btn btn-danger capitalize">{{keyValue filter 'key' 'Today'}}</button>
-				<button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-					<span class="visually-hidden">Toggle Dropdown</span>
-				</button>
-				<ul class="dropdown-menu">
-					<li><a class="dropdown-item {{#if filter.today}}bg-info-subtle{{/if}}" href="/admin/dashboard?today=true">Today</a></li>
-					<li><a class="dropdown-item {{#if filter.yesterday}}bg-info-subtle{{/if}}" href="/admin/dashboard?yesterday=true">Yesterday</a></li>
-					<li><a class="dropdown-item {{#if filter.thisWeek}}bg-info-subtle{{/if}}" href="/admin/dashboard?thisWeek=true">This Week</a></li>
-					<li><a class="dropdown-item {{#if filter.thisMonth}}bg-info-subtle{{/if}}" href="/admin/dashboard?thisMonth=true">This Month</a></li>
-					<li><a class="dropdown-item {{#if filter.thisYear}}bg-info-subtle{{/if}}" href="/admin/dashboard?thisYear=true">This Year</a></li>
-					<li><a class="dropdown-item {{#if filter.weekly}}bg-info-subtle{{/if}}" href="/admin/dashboard?weekly=true">Weekly</a></li>
-					<li><a class="dropdown-item {{#if filter.monthly}}bg-info-subtle{{/if}}" href="/admin/dashboard?monthly=true">Monthly</a></li>
-					<li><a class="dropdown-item {{#if filter.yearly}}bg-info-subtle{{/if}}" href="/admin/dashboard?yearly=true">Yearly</a></li>
-					{{!-- <li><hr class="dropdown-divider"></li> --}}
-				</ul>
-			</div>
 	</div>
 
 	<!-- Statistics -->
@@ -83,15 +66,19 @@
 								<article class="card-body">
 									<div class="d-flex align-items-center justify-content-between px-3 py-3 border-bottom">
 										<h5 class="card-title m-0">Sale statistics</h5>
-										{{!-- <div class="dropdown">
-											<a href="#" data-bs-toggle="dropdown" class="btn btn-light bg-white rounded-3 px-1 btn-sm font-sm" aria-expanded="false"> 
-												<i class="las la-ellipsis-v fs-4"></i>
-											</a>
-											<div class="dropdown-menu" style="margin: 0px;">
-												<a class="dropdown-item" href="#">Bar</a>
-												<a class="dropdown-item" href="#">Line</a>
-											</div>
-										</div> --}}
+										<div class="btn-group">
+											<button type="button" class="btn btn-danger rounded-start-4 capitalize">{{keyValue filter 'key' 'Today'}}</button>
+											<button type="button" class="btn btn-danger rounded-end-4 dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+												<span class="visually-hidden">Toggle Dropdown</span>
+											</button>
+											<ul class="dropdown-menu">
+												<li><a class="dropdown-item {{#if filter.today}}bg-info-subtle{{/if}}" href="/admin/dashboard?today=true">Today</a></li>
+												<li><a class="dropdown-item {{#if filter.yesterday}}bg-info-subtle{{/if}}" href="/admin/dashboard?yesterday=true">Yesterday</a></li>
+												<li><a class="dropdown-item {{#if filter.thisWeek}}bg-info-subtle{{/if}}" href="/admin/dashboard?thisWeek=true">This Week</a></li>
+												<li><a class="dropdown-item {{#if filter.thisMonth}}bg-info-subtle{{/if}}" href="/admin/dashboard?thisMonth=true">This Month</a></li>
+												<li><a class="dropdown-item {{#if filter.thisYear}}bg-info-subtle{{/if}}" href="/admin/dashboard?thisYear=true">This Year</a></li>											
+											</ul>
+										</div>
 									</div>
 									<canvas id="myChart" height="150px" class="p-3"></canvas>
 								</article>
@@ -254,70 +241,67 @@
 			showItems: 1
 	});
 
-
 	(async function() {
 
-		const filteredData = {{{json filtered}}}
 		
-		const dates = filteredData.map(data => data.date)
-		{{!-- const salesData = filteredData.map(data => data.sales); --}}
-		const revenueData = filteredData.map(data => data.order_total);
-		const discountsData = filteredData.map(data => data.discounts);
-		const taxesData = filteredData.map(data => data.tax);
+		const data = {{{json chartData}}}
+		const validOrders = data.validOrders;
+		const dates = validOrders.map(item => item.date);
+    const totalSales = validOrders.map(item => item.revenue);
 
-		new Chart(
-			document.getElementById('myChart').getContext('2d'),
-			{
-				type: 'line',
-				data: {
-						labels: dates,
-						datasets: [
-							{{!-- {
-								label: 'Sales',
-								tension: 0.3,
-								fill: true,
-								backgroundColor: 'rgba(380, 200, 230, 0.2)',
-								borderColor: 'rgb(380, 200, 230)',
-								data: salesData
-							}, --}}
-							{
-								label: 'Revenue',
-								tension: 0.3,
-								fill: true,
-								backgroundColor: 'rgba(4, 209, 130, 0.2)',
-								borderColor: 'rgb(4, 209, 130)',
-								data: revenueData
-							},
-							{
-								label: 'Discounts',
-								tension: 0.3,
-								fill: true,
-								backgroundColor: 'rgba(44, 120, 220, 0.2)',
-								borderColor: 'rgba(44, 120, 220)',
-								data: discountsData
-							},
-							{
-								label: 'Taxes',
-								tension: 0.3,
-								fill: true,
-								backgroundColor: 'rgba(253, 138, 20, 0.2)',
-								borderColor: '#fd8a14',
-								data: taxesData
-							},
+		//cancelled
+		const cancelled = data.cancelledOrdes;
+    const cancelledSales = cancelled.map(item => item.revenue);
 
-						]
-				},
-				options: {
-						plugins: {
-						legend: {
-								labels: {
+		//pending orders
+		const pending = data.pendingOrders;
+    const pendingSales = pending.map(item => item.revenue);
+
+    // Create the chart
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const salesChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [
+					{
+						label: 'Orders',
+						data: totalSales,
+						tension: 0.3,
+						fill: true,
+						backgroundColor: 'rgba(4, 209, 130, 0.2)',
+						borderColor: 'rgb(4, 209, 130)',
+					},
+					{
+						label: 'Cancelled',
+						data: cancelledSales,
+						tension: 0.3,
+						fill: true,
+						backgroundColor: 'rgba(253, 138, 20, 0.2)',
+						borderColor: '#fd8a14',
+					},
+					{
+						label: 'Pending',
+						data: pendingSales,
+						tension: 0.3,
+						fill: true,
+						backgroundColor: 'rgba(44, 120, 220, 0.2)',
+						borderColor: 'rgba(44, 120, 220)',
+					},
+				]
+      },
+      options: {
+        responsive: true,
+				plugins: {
+					legend: {
+							labels: {
 								usePointStyle: true,
-								},
-						}
-						}
+							},
+					}
 				}
-			}
-		);
+      }
+    });
+
 	})();
 
 </script>
