@@ -1,12 +1,13 @@
 const Product = require('../models/productModel');
 const Category = require('../models/categoryModel')
+const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 const fn = require('../helpers/functions');
 const constants = require('../constants/constants')
 require('dotenv').config()
 
-const getProducts = async (req, res) => {
+exports.getProducts = async (req, res) => {
   const {from} = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
@@ -50,9 +51,7 @@ const getProducts = async (req, res) => {
   });
 }
 
-const addProduct = async (req, res) => {
-
-  //console.log('add',req.session.product_info,req.session.product_values)
+exports.addProduct = async (req, res) => {
 
   return res.render('admin/addProduct',{
     pageName: 'products',
@@ -63,50 +62,57 @@ const addProduct = async (req, res) => {
   })
 }
 
-const saveDraft = async (req, res) => {
-  let {status} = req.body
-  console.log(req.body);
-}
-
-const publishProduct = async (req, res) => {
+exports.publishProduct = async (req, res) => {
 
   /* Validation => */
-    
   let pInfo = {}, pValue = {};
+  req.body.images = req.files
   
   Object.entries(req.body)
   .filter(obj => { 
-    if(Array.isArray(obj[1]) && obj[1].find(el => !Array.isArray(el) && Object.entries(el).filter(([,val]) => !val.length))){
-      
+    
+    if(Array.isArray(obj[1]) && obj[1].find(el => !Array.isArray(el) && typeof el === 'object' && Object.entries(el).filter(([_,val]) =>  !val.toString().length) )){
       return obj[1].find(el => !Array.isArray(el))
     }else{
-      
-      return !obj[1].length || (obj[0] === 'images' && obj[1].length < 3)
+      return !obj[1].length || (obj[0] === 'images' && req.body.error_images.length < 3)
     }
+    
   })
   .map(obj => {
+    
     let key;
     if(typeof obj[1] === 'object' && obj[1].find(el => !Array.isArray(el))){
-      const elm = Object.entries(obj[1].find(el => !Array.isArray(el))).filter(([,val]) => !val.length);
+      const elm = Object.entries(obj[1].find(el => !Array.isArray(el))).filter(([_,val]) =>  !val || !val.toString().length);
       
       elm.forEach(k => {
         key = k[0].replace('_'," ");
         pInfo[k[0]] = `${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()} cannot blank`
       })
-
-    }else{
-      if((obj[0] === 'images' && obj[1].length < 3)){
+      if(obj[0] === 'images' && obj[1].length < 3){
         key = obj[0].replace('_'," ");
         pInfo[obj[0]] = 'Atleat 3 images required.'
+      }
+    }else{
+      if(obj[0] === 'images'){
+        if(!obj[1].length){
+          key = obj[0].replace('_'," ");
+          pInfo[obj[0]] =  `${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()} cannot blank`
+        }
+        if(obj[1].length < 3){
+          key = obj[0].replace('_'," ");
+          pInfo[obj[0]] = 'Atleat 3 images required.'
+        }
+        
       }else{
         key = obj[0].replace('_'," ");
-        pInfo[obj[0]] = `${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()} cannot blank`
+        pInfo[obj[0]] =  `${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()} cannot blank`
       }
       
     }
+    
     return pInfo
   });
-
+  
   Object.entries(req.body) 
     .filter(obj =>{
       if(Array.isArray(obj[1])){
@@ -118,7 +124,17 @@ const publishProduct = async (req, res) => {
     })
     .map(obj => {
 
-      pValue[obj[0]] = obj[1]
+      if(obj[0] === 'images'){
+        const images = obj[1].map(image => {
+          return {
+            base64: `data:image/jpg;base64,${image.buffer.toString('base64')}`,
+            filename: image.originalname,
+          }
+        })
+        pValue['images'] = images
+      }else{
+        pValue[obj[0]] = obj[1]
+      }
 
       return pValue
   });
@@ -130,7 +146,6 @@ const publishProduct = async (req, res) => {
   //return validation messages on blank
   if(Object.keys(pInfo).length){
     req.session.product_info = pInfo
-    //return res.redirect('/admin/add-product')
     return res.send(fn.sendResponse(400,'Blank Data!','error','Fields can\'t blank!'))
   }
 
@@ -143,6 +158,7 @@ const publishProduct = async (req, res) => {
   if(parseFloat(original_price) <= 0 || parseFloat(stock) < 0){
     return res.send(fn.sendResponse(400,'Invalid Entry!','error','Please enter valid numbers!'))
   }
+
   
   const newProduct = new Product({
     product_name,
@@ -160,7 +176,10 @@ const publishProduct = async (req, res) => {
     images
   })
 
-  await newProduct.save().then(()=>{
+  const {section} = req.query
+
+  await saveProduct(images,section,product_slug,newProduct)
+  .then(()=>{
     return res.send(fn.sendResponse(201,'Success!','success','Product created successfully'))
   }).catch((error) =>{
     if (error.code === 11000) {
@@ -173,7 +192,7 @@ const publishProduct = async (req, res) => {
   
 }
 
-const editProduct = async (req, res) => {
+exports.editProduct = async (req, res) => {
   const {slug} = req.params
   
   return res.render('admin/editProduct',{
@@ -186,7 +205,7 @@ const editProduct = async (req, res) => {
   })
 }
 
-const deleteProduct = async (req, res) => {
+exports.deleteProduct = async (req, res) => {
   const {slug} = req.params
 
   await Product.findOneAndUpdate({product_slug:slug},{
@@ -197,20 +216,18 @@ const deleteProduct = async (req, res) => {
   }).catch(err => {
     console.log(err);
   })
-
-  //return res.redirect('/admin/products')
 }
 
-const deleteProductImage = async (req,res) => {
+exports.deleteProductImage = async (req,res) => {
   
   const {slug} = req.params
   const {src} = req.query
   const dirPath = path.join(constants.UPLOAD_PATH, `products/${slug}`)
   const filePath = path.join(constants.UPLOAD_PATH, `products/${slug}`, src.split('/').pop());
   const product = await Product.findOne({product_slug:slug})
-  if(product.images.length < 3 ) return res.send(fn.sendResponse(400,'Error!','error','Please keep 3 images for product.'))
-  product.images = product.images.filter(image => image != src)
 
+  if(product.images.length < 4 ) return res.send(fn.createToast(false,'error','Please keep 3 images for product.'))
+  product.images = product.images.filter(image => image != src)
   fs.unlink(filePath,(async err =>{
     if(err){
       console.log(err) 
@@ -231,7 +248,7 @@ const deleteProductImage = async (req,res) => {
 
 }
 
-const restoreProduct = async (req, res) => {
+exports.restoreProduct = async (req, res) => {
   const {slug} = req.params
 
   await Product.findOneAndUpdate({product_slug:slug},{
@@ -243,45 +260,52 @@ const restoreProduct = async (req, res) => {
     console.log(err);
   })
   
-  //return res.redirect('/admin/products')
 }
 
-const updateProduct = async (req, res) => {
+exports.updateProduct = async (req, res) => {
   
   /* Validation => */
   const {slug} = req.params;
-  const {from, len} = req.query;
+  const {from, len, section} = req.query;
+  req.body.images = req.files
   
   let pInfo = {}, pValue = {};
   
   Object.entries(req.body)
   .filter(obj => {
     
-    if(Array.isArray(obj[1]) && !obj[1].find(el => !Array.isArray(el) && Object.entries(el).filter(([,val]) => val).length)){
-      if(obj[0] != 'images' || !(from == 'edit' && len > 2)){
-        return obj[1].find(el => !Array.isArray(el))
-      }
+    if(Array.isArray(obj[1]) && obj[1].find(el => !Array.isArray(el) && Object.entries(el).filter(([_,val]) => !val.length))){
+      
+      return obj[1].find(el => !Array.isArray(el)) && (obj[0] !== 'images' || !(from == 'edit' && len > 2))
     }else{
-      return !obj[1].length || (obj[0] === 'images' && obj[1].length < 3)
+      
+      return !obj[1].length || (obj[0] === 'images' && from == 'edit' && len < 3 && obj[1].length < 3)
     }
   })
   .map(obj => {
     let key;
     if(typeof obj[1] === 'object' && obj[1].find(el => !Array.isArray(el))){
-      const elm = Object.entries(obj[1].find(el => !Array.isArray(el))).filter(([,val]) => !val.length);
+      const elm = Object.entries(obj[1].find(el => !Array.isArray(el))).filter(([_,val]) => !val || !val.toString().length);
       
       elm.forEach(k => {
         key = k[0].replace('_'," ");
         pInfo[k[0]] = `${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()} cannot blank`
       })
-      if((obj[0] === 'images' && obj[1].length < 3)){
-        key = obj[0].replace('_'," ");
-        pInfo[obj[0]] = 'Atleat 3 images required.'
-      }
     }else{
-      
-      key = key = obj[0].replace('_'," ");
-      pInfo[obj[0]] = `${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()} cannot blank`
+      if(obj[0] === 'images'){
+        if(obj[1].length < 3  && from == 'edit' && len < 3){
+          key = obj[0].replace('_'," ");
+          pInfo[obj[0]] = 'Atleat 3 images required.'
+        }
+        if(!obj[1].length && from == 'edit' && !len){
+          key = obj[0].replace('_'," ");
+          pInfo[obj[0]] =  `${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()} cannot blank`
+        }
+        
+      }else{
+        key = obj[0].replace('_'," ");
+        pInfo[obj[0]] =  `${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()} cannot blank`
+      }
     }
     return pInfo
   });
@@ -296,7 +320,17 @@ const updateProduct = async (req, res) => {
       }
     })
     .map(obj => {
-      pValue[obj[0]] = obj[1]
+      if(obj[0] === 'images'){
+        const images = obj[1].map(image => {
+          return {
+            base64: `data:image/jpg;base64,${image.buffer.toString('base64')}`,
+            filename: image.originalname,
+          }
+        })
+        pValue['images'] = images
+      }else{
+        pValue[obj[0]] = obj[1]
+      }
       return pValue
   });
 
@@ -304,7 +338,6 @@ const updateProduct = async (req, res) => {
     req.session.product_values = pValue;
   }
 
-  console.log('test1',pInfo)
   //return validation messages on blank
   if(Object.keys(pInfo).length){
     req.session.product_info = pInfo
@@ -321,24 +354,23 @@ const updateProduct = async (req, res) => {
     return res.send(fn.sendResponse(400,'Invalid Entry!','error','Please enter valid numbers!'))
   }
 
-  await Product.findOneAndUpdate({product_slug:slug},{
-    $set: {
-      product_name,
-      product_slug,
-      product_status,
-      description,
-      pricing:{
-        original_price,
-      },
-      stock,
-      brand,
-      category,
-      specifications,
-      variants,
+  const product = {
+    product_name,
+    product_slug,
+    product_status,
+    description,
+    pricing:{
+      original_price,
     },
-    $addToSet: {images:images}
+    stock,
+    brand,
+    category,
+    specifications,
+    variants,
+  }
 
-  }).then(() => {
+  await updateProduct(images,section,product)
+  .then(() => {
     return res.send(fn.sendResponse(201,'Success!','success','Product updated successfully'))
   }).catch((error) =>{
     // Handle other errors
@@ -347,7 +379,7 @@ const updateProduct = async (req, res) => {
   })
 }
 
-const clearSession = (req, res) => {
+exports.clearSession = (req, res) => {
   const {status} = req.params;
   if(status == 201){
     req.session.product_info= null;
@@ -361,15 +393,99 @@ const clearSession = (req, res) => {
   }
 }
 
-module.exports = {
-  getProducts,
-  addProduct,
-  saveDraft,
-  publishProduct,
-  editProduct,
-  deleteProduct,
-  deleteProductImage,
-  restoreProduct,
-  updateProduct,
-  clearSession
+const writeImage = async function(file, newFilename){
+  await sharp(file.buffer)
+        .resize(800, 800)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toFile(`${newFilename}`);
 }
+
+const saveProduct = async (files,section,product) => {
+
+  return new Promise(async (resolve,reject) => {
+    try {
+      const dir = path.join(constants.UPLOAD_PATH, `${section}/${product.product_slug}`);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir,{recursive: true});
+      }
+  
+      const images = []
+
+      const isExist = await Product.find(
+        {
+          $or:[{product_name:product.product_name},{product_slug:product.product_slug}]
+        }
+      )
+
+      if(isExist){
+        const err = new Error('This product already exists!')
+        err.code = 11000
+        throw err
+      }
+  
+      await Promise.all(
+        files.map(async (file) => {
+          
+          const filename = file.originalname.split('-').pop().replace(/\..+$/, '');
+          const newFilename = `${filename}.jpg`
+          await writeImage(file, `${dir}/${newFilename}`)
+          const link = `/admin/images/uploads/${section}/${product.product_slug}/${newFilename}`
+          images.push(link);
+        })
+      );
+  
+      product.images = images;
+  
+      await product.save();
+
+      resolve(product);
+  
+    } catch (error) {
+      console.error('Error Saving product:', error);
+      reject(error);
+    }
+  })
+  
+};
+
+const updateProduct = async (files,section,product) => {
+
+  return new Promise(async (resolve,reject) => {
+    try {
+      const dir = path.join(constants.UPLOAD_PATH, `${section}/${product.product_slug}`);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir,{recursive: true});
+      }
+  
+      const images = []
+  
+      await Promise.all(
+        files.map(async (file) => {
+          
+          const filename = file.originalname.split('-').pop().replace(/\..+$/, '');
+          const newFilename = `${filename}.jpg`
+          await writeImage(file, `${dir}/${newFilename}`)
+          const link = `/admin/images/uploads/${section}/${product.product_slug}/${newFilename}`
+          images.push(link);
+        })
+      );
+
+      const updatedProduct = await Product.findOneAndUpdate(
+        {product_slug:product.product_slug},
+        {
+          $set: product,
+          $addToSet: {images:images}
+        },
+        {new: true}
+      )
+  
+      resolve(updatedProduct);
+  
+    } catch (error) {
+      console.error('Error Saving product:', error);
+      reject(error);
+    }
+  })
+  
+};

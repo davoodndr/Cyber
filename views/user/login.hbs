@@ -53,11 +53,10 @@
 
   const info = '{{login_info}} | {{json login_values}}'
   const status = '{{login_info.status}}'
-  //console.log('info',info)
 
   if(status){
     const {title,msg,icon} = JSON.parse('{{{json login_info}}}')
-    console.log('info',title)
+    
     Swal.fire({
       title: title,
       text: msg,

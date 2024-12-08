@@ -9,17 +9,14 @@
       <a href="/admin/products?from=edit" class="create-btn me-2">
         Back
       </a>
-      {{!-- <button class="create-btn me-2">
-        Save Draft
-      </button> --}}
       <button class="create-btn publish-btn">
         Update
       </button>
     </div>
   </div>
   
-  <div class="col-12 info-box {{!-- overflow-auto --}}">
-    <form {{!-- action="/admin/update-product/{{product._id}}" --}} id="add-product-form" enctype="multipart/form-data">
+  <div class="col-12 info-box ">
+    <form id="add-product-form" enctype="multipart/form-data">
 
       <div class="row">
 
@@ -106,16 +103,16 @@
                       </td>
                       <td>
                         <div>
-                          <input type="text" name="specifications[{{@index}}][spec_name]" class="form-control {{#if product_info.spec_name}}is-invalid{{/if}}"
-                            value="{{remember product_values.spec_name this.spec_name}}" placeholder="Add spec name">
-                          {{#if product_info.spec_name}}<span class="invalid-feedback">{{product_info.spec_name}}</span>{{/if}}
+                          <input type="text" name="specifications[{{@index}}][spec_name]" class="form-control {{#if ../product_info.spec_name}}is-invalid{{/if}}"
+                            value="{{remember ../product_values.spec_name this.spec_name}}" placeholder="Add spec name">
+                          {{#if ../product_info.spec_name}}<span class="invalid-feedback">{{../product_info.spec_name}}</span>{{/if}}
                         </div>
                       </td>
                       <td>
                         <div>
-                          <input type="text" name="specifications[{{@index}}][spec_value]" class="form-control {{#if product_info.spec_value}}is-invalid{{/if}}"
-                            value="{{remember product_values.spec_name this.spec_value}}" placeholder="Add spec value">
-                          {{#if product_info.spec_value}}<span class="invalid-feedback">{{product_info.spec_value}}</span>{{/if}}
+                          <input type="text" name="specifications[{{@index}}][spec_value]" class="form-control {{#if ../product_info.spec_value}}is-invalid{{/if}}"
+                            value="{{remember ../product_values.spec_value this.spec_value}}" placeholder="Add spec value">
+                          {{#if ../product_info.spec_value}}<span class="invalid-feedback">{{../product_info.spec_value}}</span>{{/if}}
                         </div>
                       </td>
                       <td class="px-3">
@@ -151,17 +148,9 @@
             <div class="card-body">
               <div class="img-viewer row gx-4 align-items-start justify-content-between px-3">
                 <div class="col-md-2 rounded-4 media-thumb-container">
-                  {{!-- {{#if product.images}}
-                    {{#each product.images}}
-                      <div class="media-thumb-wrapper thumb-place-holder border rounded-4 mb-2">
-                        <img class="img-fluid" src="{{this}}" alt="">
-                      </div>
-                    {{/each}}
-                  {{else}} --}}
                     <div class="media-thumb-wrapper thumb-place-holder border rounded-4 mb-2">
                       <img class="img-fluid p-4" src="/admin/images/icons/image_add.png" alt="">
                     </div>
-                  {{!-- {{/if}} --}}
                 </div>
                 <div class="media-cropper col-md-10 pe-0">
                   <div class="media-img-wrapper border rounded-4 overflow-hidden mb-3">
@@ -203,7 +192,7 @@
         <div class="col-4">
           <!-- Pricing -->
           <div class="card mb-4">
-            <h5 class="card-header">Pricing & Availability</h5>
+            <h5 class="card-header">Pricing &amp; Availability</h5>
             <div class="card-body">
               <div class="mb-3">
                 <label for="original-price" class="form-label">Price</label>
@@ -211,12 +200,6 @@
                   value="{{remember product_values.original_price product.pricing.original_price}}" id="original-price" placeholder="Enter original price">
                 {{#if product_info.original_price}}<span class="invalid-feedback">{{product_info.original_price}}</span>{{/if}}
               </div>
-              {{!-- <div class="mb-3">
-                <label for="selling-price" class="form-label">Selling Price</label>
-                <input type="text" name="selling_price" class="form-control {{#if product_info.selling_price}}is-invalid{{/if}}"
-                  value="{{remember product_values.selling_price product.pricing.selling_price}}" id="selling-price" placeholder="Enter selling price">
-                {{#if product_info.selling_price}}<span class="invalid-feedback">{{product_info.selling_price}}</span>{{/if}}
-              </div> --}}
               <div class="mb-3">
                 <label for="stock" class="form-label">Stock</label>
                 <input type="text" name="stock" class="form-control {{#if product_info.stock}}is-invalid{{/if}}"
@@ -255,53 +238,7 @@
             </div>
           </div>
 
-          <!-- Variants Type -->
-          {{!-- <div class="card mb-4">
-            <div class="card-header d-flex align-items-center justify-content-between">
-              <h5>Variants Type</h5>
-              <a id="btn-add-type" class="btn text-primary">
-                <i class="las la-plus"></i> Add Type
-              </a>
-            </div>
-            <div class="card-body var-type-table d-flex flex-column justify-content-between">
-
-              <div class="list-group w-100 mb-2">
-                
-              </div>
-            </div>
-          </div> --}}
-
         </div>
-
-        <!-- Add Varaiant -->
-        {{!-- <input type="hidden" id="vars" value="{{product.variants}}">
-        <div class="col-12 mb-5">
-          <div class="card">
-            <div class="card-header d-flex align-items-center justify-content-between">
-              <h5>Variants</h5>
-              <a class="btn text-primary" id="btn-add-variant">
-                <i class="las la-plus"></i> Add Variant
-              </a>
-            </div>
-            <div class="card-body p-0">
-              <table class="table add-variant-table">
-                <thead>
-                  <tr>
-                    <th><input type="checkbox" class="form-check-input"></th>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Option</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div> --}}
 
       </div>
     </form>
@@ -312,41 +249,63 @@
 
 <script>
 
-  //console.log('info',['{{product_info.product_name}}','{{product_values.specifications.spec_name}}'])
-  
   /* File input */
   let cropper;
   let imageFiles = [], croppedFiles = [], variantTypes = [], variantOptions = [];
 
   // insert images to board
   $('#imageInput').on('change',function(e){
+
+    const allowedImageTypes = ['image/jpeg','image/jpg', 'image/png', 'image/bmp'];
+
     $('.media-thumb-container div.thumb-place-holder').remove()
+    
     const files = Array.from(e.target.files);
     $('#cropper').attr('src',URL.createObjectURL(files[0]))
 
     // count images in container to put index on files
     const imgCount = $('.media-thumb-container').children().length
 
-    files.forEach((file,i) => {
-        const reader = new FileReader();
-        reader.index = imgCount
-        reader.onload = (event) => {
-            // Show the cropping modal
-            $('.media-thumb-container').append(`<div class="media-thumb-wrapper border rounded-4 mb-2">
-                    <a id="btn-delete-thumb" class="btn-thumb-delete">
-                      <i class="lar la-trash-alt"></i>
-                    </a>
-                    <img src="${event.target.result}" alt="">
-                  </div>`)
+    for(let i = 0; i < files.length; i++){
+      const file = files[i];
+      if(!allowedImageTypes.includes(file.type)){
+        Swal.fire({
+          title: 'Error',
+          text: `File type '${file.type}' is not supported`,
+          icon: 'error',
+          confirmButtonText: 'Okay'
+        })
+        if(imgCount < 1){
+          $('#cropper').attr('src','/admin/images/icons/upload_icon.png')
+          $('.media-thumb-container').append(
+            `<div class="media-thumb-wrapper thumb-place-holder border rounded-4 mb-2">
+              <img class="img-fluid p-4" src="/admin/images/icons/image_add.png" alt="">
+            </div>`
+          )
+        }else{
+          {{#if product.images}}$('#cropper').attr('src',{{{json product.images}}}[0])
+          {{else}}$('#cropper').attr('src','/admin/images/icons/upload_icon.png')
+          {{/if}}
+        }
+        return false
+      }
+      const reader = new FileReader();
+      reader.index = imgCount
+      reader.onload = (event) => {
+          // Show the cropping modal
+          $('.media-thumb-container').append(`<div class="media-thumb-wrapper border rounded-4 mb-2">
+                  <a id="btn-delete-thumb" class="btn-thumb-delete">
+                    <i class="lar la-trash-alt"></i>
+                  </a>
+                  <img src="${event.target.result}" alt="">
+                </div>`)
 
-            //showCropper(event,i)
-          
-            // Save image file for later use
-            file.index = imgCount
-            imageFiles.push(file);
-        };
-        reader.readAsDataURL(file);
-    });
+          // Save image file for later use
+          file.index = imgCount
+          imageFiles.push(file);
+      };
+      reader.readAsDataURL(file);
+    };
   })
 
   // show crop view on thumbnail click
@@ -387,12 +346,11 @@
   }
 
   // load images from db and show in thumbnails
-  let imgs = '{{product_values.images}}' || $('#imgs').val();
-  if(imgs){
-    imgs = imgs.split(',')
-    
+  const productImages = {{#if product.images}} {{{json product.images}}}{{else}}undefined{{/if}}
+
+  if(productImages){
     $('.media-thumb-container div.thumb-place-holder').remove()
-    imgs.forEach(async function(img, i) {
+    productImages.forEach(async function(img, i) {
       $('.media-thumb-container').append(`<div class="media-thumb-wrapper reloader border rounded-4 mb-2">
         <a id="btn-delete-thumb" class="btn-thumb-delete">
           <i class="lar la-trash-alt"></i>
@@ -410,7 +368,36 @@
         fileFormServer.index = i
         imageFiles.push(fileFormServer)
       })
+    })
+  }
+
+  let imgs = {{#if product_values.images}}{{{json product_values.images}}}{{else}}undefined{{/if}};
+  if(imgs){
+    if(!productImages.length) $('.media-thumb-container div.thumb-place-holder').remove()
+    imgs.forEach(async function(img, i) {
+      $('.media-thumb-container').append(`<div class="media-thumb-wrapper reloader border rounded-4 mb-2">
+        <a id="btn-delete-thumb" class="btn-thumb-delete">
+          <i class="lar la-trash-alt"></i>
+        </a>
+        <img src="${img.base64}" alt="">
+      </div>`)
       
+      const imgContainer = $($('.media-thumb-container')[i]).find('img')[0];
+      if(imgContainer){
+        const src =  $($('.media-thumb-container')[i]).find('img')[0].src
+      
+        await fetch(src, {mode:'no-cors'})
+        .then(response => {
+          return response.blob()
+        }).then(blob => {
+          const fileFormServer = new File([blob],src.split('/').pop());
+          $('#cropper').attr('src',URL.createObjectURL(fileFormServer))
+        })
+      }
+
+      const imgFile = new File([base64ToBlob(img.base64)],img.filename,{type: 'image/jpg'})
+      imgFile.index = productImages.length + i
+      croppedFiles.push(imgFile)
     })
   }
 
@@ -419,10 +406,9 @@
 
     const canvas = cropper.getCroppedCanvas();
     const filename = imageFiles[cropper.index].name;
-    //console.log('on crop',filename)
+    
     canvas.toBlob(blob => {
       const croppedFile = new File([blob],filename,{type: 'image/jpg'});
-      //croppedFile.index = cropper.index
       croppedFiles.push(croppedFile)
       let thumbViewer = $($('.media-thumb-container').children()[cropper.index]).find('img')[0]
       thumbViewer.src = URL.createObjectURL(croppedFile)
@@ -433,11 +419,11 @@
 
   // remove iamge & thumbnail from board on delete click
   $('.media-thumb-container').on('click','div.media-thumb-wrapper a', function(e) {
-    //console.log($(this).closest('div.media-thumb-wrapper'))
+    
     e.stopPropagation();
     const index = $(this).parent().index()
-    let src = $(this).parent().find('img')[0].src
-    
+    let src = productImages && productImages.length ? productImages[index] : undefined 
+
     Swal.fire({
       title: "Are you sure?",
       text: "This action will delete the image from database",
@@ -448,45 +434,49 @@
       confirmButtonText: "Yes, delete it!"
     }).then((result) => {
       if (result.isConfirmed) {
-        $.ajax({
-          type: 'POST',
-          url: `/admin/products/{{product.product_slug}}/delete-image?src=${src}`,
-          success: function(res){
-            console.log(res)
-            window.location.reload()
+        if(src){
+          $.ajax({
+            type: 'POST',
+            url: `/admin/products/{{product.product_slug}}/delete-image?src=${src}`,
+            success: function(res){
+              if(!res.success){
+                Toast(2000,res.icon,res.msg).then(()=> window.location.reload())
+              }
+            }
+          })
+        }else{
+          imageFiles.splice(index,1);
+          croppedFiles.splice(index,1)
+          if(!imageFiles.length){
+            if (cropper) {
+              cropper.destroy();
+            }
+            $('#cropper').attr('src','/admin/images/icons/upload_icon.png')
+            $('.media-thumb-container').append(
+              `
+              <div class="media-thumb-wrapper thumb-place-holder border rounded-4 mb-2">
+                <img class="img-fluid p-4" src="/admin/images/icons/image_add.png" alt="">
+              </div>
+              `
+            )
           }
-        })
+          
+          $(this).closest('div.media-thumb-wrapper').remove();
+        }
       }
     });
 
-    /*imageFiles.splice(index,1);
-    croppedFiles.splice(index,1)
-    if(!imageFiles.length){
-      if (cropper) {
-        cropper.destroy();
-      }
-      $('#cropper').attr('src','/admin/images/icons/upload_icon.png')
-      $('.media-thumb-container').append(
-        `
-        <div class="media-thumb-wrapper thumb-place-holder border rounded-4 mb-2">
-          <img class="img-fluid p-4" src="/admin/images/icons/image_add.png" alt="">
-        </div>
-        `
-      )
-    }
-    
-    $(this).closest('div.media-thumb-wrapper').remove();*/
   })
 
   // add specification
-  let specs = '{{product_values.specifications}}' /*|| $('#specs').val()*/
-  if(specs && specs != 'null'){
-    specs = specs.split(',')
+  let specs = {{#if product_values.specifications}} {{{json product_values.specifications}}}{{else}}undefined{{/if}}
+  
+  if(specs){
     const frm = $('.add-spec-table').find('tbody');
     $(frm).find('tr').remove()
     
     specs.forEach((el,i) => {
-      //console.log('test',el)
+      
       $(frm).append(
       `
         <tr>
@@ -497,13 +487,15 @@
             </a>
           </td>
           <td>
-            <div class="">
-              <input type="text" name="specifications[${i}][spec_name]" class="form-control" placeholder="Add spec name" value="${el['spec_name']}">
+            <div>
+              <input type="text" name="specifications[${i}][spec_name]" 
+              class="form-control {{#if product_info.spec_name}}is-invalid{{/if}}" placeholder="Add spec name" value="${el['spec_name']}">
             </div>
           </td>
           <td>
-            <div class="">
-              <input type="text" name="specifications[${i}][spec_value]" class="form-control" placeholder="Add spec value" value="${el['spec_value']}">
+            <div>
+              <input type="text" name="specifications[${i}][spec_value]" 
+              class="form-control {{#if product_info.spec_value}}is-invalid{{/if}}" placeholder="Add spec value" value="${el['spec_value']}">
             </div>
           </td>
           <td class="px-3">
@@ -785,27 +777,29 @@
 
   // remove variant table row
   $('.add-variant-table tbody').on('click','a', function(e){
-    //let ind = $(e.delegateTarget.children).index(e.currentTarget)
+    
     $(this).closest('tr').remove();
   })
 
   $('.publish-btn').on('click',async function(){
 
     let data = new FormData(document.getElementById('add-product-form'))
+
     croppedFiles.forEach(file => {
       data.append('images',file)
     })
 
-    let len = '{{length product.images}}'
-      if(len) len = parseInt(len) ?? croppedFiles.length
+    let len = productImages ? productImages.length : croppedFiles.length;
 
+    $('.loader-bg').css('display','flex')
     // included 'products' in query as it is called for creating folder (ref - image upload)
     await fetch(`/admin/products/{{product.product_slug}}/update?section=products&from=edit&len=${len}`, {
       method: 'POST',
       body: data,
       
     }).then(res => res.json()).then(res => {
-      console.log('final',res) 
+      $('.loader-bg').css('display','none')
+
       Swal.fire({
         title: res.title,
         text: res.msg,
@@ -824,29 +818,30 @@
             }
           })
       });
-    }).catch(err => 
+      
+    }).catch(err => {
+      $('.loader-bg').css('display','none')
       console.log(err)
-    );
+    });
   })
 
-  /* SUBMIT */
-
   const status = '{{product_info.status}}'
+  
+  function base64ToBlob(base64, mimeType) {
+    const base64Data = base64.split(',')[1];
+    const binaryData = atob(base64Data);
+    const byteArrays = [];
+    for (let offset = 0; offset < binaryData.length; offset++) {
+      const byte = binaryData.charCodeAt(offset);
+      byteArrays.push(byte);
+    }
 
-  // show actions on statuses
-  /*if(status){
-    Swal.fire({
-      title: "{{product_info.title}}",
-      text: '{{product_info.msg}}',
-      icon: "{{product_info.icon}}"
-    }).then(()=>{
-      $.ajax({
-          type: 'GET',
-          url: `/admin/products/clear-session`,
-          success: function(msg) {}
-      });
-    });
-  }*/
+    // Create a Blob from the byte arrays
+    const byteArray = new Uint8Array(byteArrays);
+    const blob = new Blob([byteArray], { type: mimeType });
+
+    return blob;
+  }
 
 </script>
 

@@ -61,9 +61,7 @@
     $.ajax({
       type: 'GET',
       url: '/remove-timer',
-      success: function(response) {
-        console.log('timer removed')
-      }
+      success: function(response) {}
     })
   }
   
@@ -91,14 +89,17 @@
               text: res.msg,
               icon: res.icon,
             }).then(()=>{
-              //if(res.url) window.location.href = res.url
-              $.ajax({
+              
+              if(res.status === 201){
+                $.ajax({
                 type: 'GET',
-                url: `/clear-session/${201}?redirect=login`,
-                success: function(res) {
-                  window.location.href = '/login'
-                }
-              })
+                url: `/clear-session/${201}?redirect=signup`,
+                  success: function(response) {
+                    window.location.href = res.values.url
+                  }
+                })
+              }
+              
             });
           }
       });

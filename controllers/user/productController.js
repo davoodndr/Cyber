@@ -55,7 +55,7 @@ const viewProduct = async (req, res) => {
 };
 
 const addReview = async (req, res) => {
-	//console.log(req.body)
+	
 	const { productId, user, rating, reviewTitle, reviewText } = req.body;
 
 	if (parseInt(rating) <= 0) {
@@ -185,7 +185,7 @@ const getCollections = async (req, res) => {
 
 const getSuggestions = async (req, res) => {
 	const { search } = req.query;
-	//const cat = await Category.findOne({ _id: category });
+	
 	const products = await Product.aggregate([
     { $match: { product_name: new RegExp(search, 'i') } },
     { $lookup: { from: "categories", localField: "category", foreignField: "_id", as: "category" }},
@@ -201,12 +201,14 @@ const getSuggestions = async (req, res) => {
   let suggestions = [];
   products.forEach(element => suggestions.push(element.product_name, element.category_name));
   suggestions = suggestions.sort( () => .5 - Math.random() );
-  //console.log(search, suggestions);
   return res.json({ suggestions });
 };
 
 const filterCollection = async (req, res) => {
-	//console.log(req.body)
+
+	const { page = 1, pageSize = 8 } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(pageSize);
+  const limit = parseInt(pageSize);
   
 	const filters = {}, sort = {};
 
@@ -216,7 +218,6 @@ const filterCollection = async (req, res) => {
     {product_slug: new RegExp(req.body.search, 'i')},
     {brand: new RegExp(req.body.search, 'i')}
    ]
-   // cattegory filter have to use aggregate
   }
 
 	if (req.body.categories) {
@@ -247,15 +248,19 @@ const filterCollection = async (req, res) => {
     sort['createdAt'] = -1 //must here
   }
 
-  //console.log(filters)
+	const totalOrders = await Product.countDocuments();
 
-	await Product.find(filters).sort(sort)
+	await Product.find(filters).sort(sort).skip(skip).limit(limit)
 		.then(async (products) => {
 
 			const produtsWithOffer = await Promise.all(products.map(async product => {
 				return await fn.getProductsWithOffers(product._id)
 			}))
-			res.send({ payload: produtsWithOffer});
+
+			
+			const totalPages = Math.ceil(totalOrders / pageSize);
+
+			res.send({ payload: produtsWithOffer,totalPages, totalOrders, currentPage:page});
 		})
 		.catch((err) => {
 			console.log(err);

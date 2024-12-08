@@ -94,7 +94,7 @@ exports.doSignup = async (req, res) => {
           pInfo.password = 'Password not correct'
         }
       }
-      //console.log('test',username)
+      
       pValue[obj[0]] = obj[1]
       return pValue
     })
@@ -181,13 +181,12 @@ exports.verifyOTP = async (req, res) => {
   const {otp} = req.body;
   const {user_data} = req.session
 
-  console.log(user_data.email,`${otp} : ${user_data.otp}`)
-  if (user_data.otp !== otp) {
-    return res.send(fn.sendResponse(400,'Error!','error','Invalid OTP. Please Try again'))
+  if (user_data && user_data.otp !== otp) {
+    return res.send(fn.sendResponse(400,'Error!','error','Invalid OTP. Please Try again',null,{url:"/signup"}))
   }
 
-  if (user_data.otpExpiration < Date.now()) {
-    return res.send(fn.sendResponse(400,'Error!','error','OTP expired. Please request a new one.'))
+  if (user_data && user_data.otpExpiration < Date.now()) {
+    return res.send(fn.sendResponse(400,'Error!','error','OTP expired. Please retry',null,{url:"/signup"}))
   }
   
   const hashedPass = await bcrypt.hash(user_data.pass,10)
@@ -201,8 +200,7 @@ exports.verifyOTP = async (req, res) => {
 
   await newUser.save()
   .then(() => {
-    const info = fn.sendResponse(201,'Success!','success','Account created Successfully!')
-    info.url = `/clear-session/${201}?redirect=/login`
+    const info = fn.sendResponse(201,'Success!','success','Account created Successfully!',null,{url:"/login"})
     return res.send(info)
   })
   .catch((error) =>{
@@ -387,7 +385,7 @@ exports.doLogin = async (req, res) => {
 }
 
 exports.googleLogin = async (req,res) =>{
-  //console.log('google login',req.user)
+  
   const user = await User.findOne({email:req.user.email})
   if(user.isBlocked){
     req.session.login_info = fn.sendResponse(401, 'Error!', 'error', 'Your account is temporarily blocked')
@@ -425,6 +423,8 @@ exports.viewAccount = async (req, res) =>{
             .populate('billing_address')
             .populate('shipping_address')
             .sort({createdAt: -1})
+
+            
   // Process each order to get order items
   const orders = await Promise.all(ordersList.map(async(order) => {
     
@@ -441,7 +441,7 @@ exports.viewAccount = async (req, res) =>{
         item_total: item.item_total,
       };
     }));
-    //console.log(orderItems)
+    
     return {
         ...order.toObject(),
         orderItems,
@@ -450,7 +450,7 @@ exports.viewAccount = async (req, res) =>{
 
   user.wallet = user.wallet.toFixed(2)
 
-  //console.log(orders[0])
+  
   return res.render('user/account',{
     user,
     isLogged: constants.isLogged,
@@ -472,7 +472,7 @@ exports.addUserInfo = async (req, res) => {
   if(user){
     const {username,phone} = req.body
     const uname = await User.find({username});
-    console.log(uname)
+    
     if(!edit && uname.length){
       return res.send(fn.sendResponse(400, 'Error!', 'error', 'This username already taken.'))
     }
@@ -520,7 +520,7 @@ exports.addAddress = async (req, res) => {
   Object.entries(req.body)
     .filter(obj => obj[1].length)
     .map(obj => {
-      //console.log('test',username)
+      
       pValue[obj[0]] = obj[1]
       return pValue
     })
@@ -586,15 +586,12 @@ exports.addAddress = async (req, res) => {
   }).catch(err => {
     console.log(err)
     req.session.acc_info = fn.sendResponse(500, 'Error!', 'error', 'Internal Server Error')
-    //return res.redirect('/user/account')
     res.send({success:true})
   })
 
 }
 
 exports.updateAddress = async (req, res) => {
-
-  console.log('updateAddress',req.body)
 
   let pInfo = {}, pValue = {};
   Object.entries(req.body)
@@ -616,7 +613,7 @@ exports.updateAddress = async (req, res) => {
   Object.entries(req.body)
     .filter(obj => obj[1].length)
     .map(obj => {
-      //console.log('test',username)
+      
       pValue[obj[0]] = obj[1]
       return pValue
     })
@@ -734,7 +731,7 @@ exports.changePassword = async (req, res) => {
   }
 
   const pass = fn.validatePassword(password)
-  //console.log(pass)
+  
   if(typeof pass === 'string'){
     req.session.acc_info = fn.sendResponse('password_error', 'Error!', 'error', pass)
     return res.redirect('/user/account')
@@ -755,7 +752,7 @@ exports.changePassword = async (req, res) => {
 }
 
 exports.selectAddress = async (req, res) => {
-  //console.log(req.body)
+  
   const {id, type, index} = req.body
   const user = await User.findOne({_id:req.session.user._id})
   user.selected_address = id
@@ -770,7 +767,7 @@ exports.selectAddress = async (req, res) => {
 }
 
 exports.addToWallet = async (req, res) => {
-  console.log('add to wallet',req.body)
+  
   const {payment_method,transaction_amount,description} = req.body
   const user = await User.findById(req.session.user._id)
   const transaction = new Transaction({
@@ -808,10 +805,10 @@ exports.logout = (req, res) => {
 },
 
 exports.clearSession = (req, res) => {
-  //console.log(req.params)
+  
   const {status} = req.params
   const {redirect, destroy} = req.query
-  //console.log(status, redirect, destroy)
+  
   if(status == 201){
     req.session.signup_info = null
     req.session.signup_values = null
@@ -820,14 +817,12 @@ exports.clearSession = (req, res) => {
     req.session.user_data = null
     req.session.acc_info = null
     req.session.acc_values = null
-    //return res.redirect(`${redirect}`)
     return res.send({status: 201})
   }else{
     if(destroy){
       req.session.signup_info = null
       req.session.login_info = null
       req.session.acc_info = null
-      //res.redirect('/user/account')
     }
     if(redirect && redirect.length) return res.send({redirect:true})
   }

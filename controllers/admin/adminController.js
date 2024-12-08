@@ -244,7 +244,7 @@ const getReport = async function(dataFilter, orderType) {
 
   if(filter.today || filter.yesterday){
     for (let hr = 0; hr < 24; hr++) {
-      dates.push(`${hr}`);
+      dates.push(`${hr < 10 ? '0'+hr : hr}`);
     }
   }
 

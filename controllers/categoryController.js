@@ -10,8 +10,7 @@ const getCategories = async (req, res) => {
   const categories = await Categories.find().skip(skip).limit(limit)
   const count = await Categories.countDocuments();
   const totalPages = Math.ceil(count / limit);
-  //console.log(req.session.cat_info);
-  
+
   res.render('admin/categories',{
     categories, 
     cat_info: req.session.cat_info, 
@@ -110,8 +109,6 @@ const deleteCategory = async (req, res) => {
   }).catch(err => {
     console.log(err);
   })
-
-  //return res.redirect('/admin/categories')
 }
 
 const restoreCategory = async (req, res) => {
@@ -125,8 +122,6 @@ const restoreCategory = async (req, res) => {
   }).catch(err => {
     console.log(err);
   })
-  
-  //return res.redirect('/admin/categories')
 }
 
 const clearSession = (req, res) => {

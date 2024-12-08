@@ -58,7 +58,7 @@
               <div class="cart-product-details">
                 <div class="cart-product-info">
                   <a href="/view-product/{{this.slug}}" class="cart-product-name m-0">{{this.name}}</a>
-                  {{!-- <p class="product-id m-0">In: {{this.category}}</p> --}}
+                  
                   <div class="coupon d-inline-flex align-items-center">
                     <div class="d-inline-flex">
                       <p class="product-price-single"><span class="fw-normal me-2">Coast:</span><span>{{this.price}}</span></p>
@@ -106,11 +106,6 @@
     <aside class="cart-summary">
       <h2 class="summary-title">Order Summary</h2>
       <div class="summary-content">
-        {{!-- <form class="promo-section">
-          <label for="promoCode" class="input-label">Discount code / Promo code</label>
-          <input type="text" id="promoCode" class="cart-input-field promo-code-input" placeholder="Code" readonly>
-        </form> --}}
-
         <form class="bonus-section" autocomplete="off">
           <label for="bonusCard" class="input-label">Your bonus card number</label>
           <div class="cart-input-field">
@@ -178,7 +173,7 @@
       Toast(2500,'error','Please login to add product to cart')
       return false
     }
-    //console.log(event)
+    
     if(event === 'increase'){
       query = `increase=true`
     }else if(event === 'decrease'){
@@ -189,7 +184,6 @@
 
     let data = {
       product_id: product_id,
-      /*user_id: user._id,*/
     }
     
     $.ajax({
@@ -206,7 +200,7 @@
         }
 
         const cart = response.values.cart;
-        //console.log(response)
+        
         if(response.success){
           $('.cart .bubble').attr('aria-label', `${response.values.cart_count}`)
           $('.cart .bubble').removeClass('hide')
@@ -258,7 +252,6 @@
           $('.shipping-charge').html(response.shippingCharge)
           $('.grand-total').html(response.total)
 
-          console.log(response.coupon)
           if(response.coupon && response.coupon.success === false){
             $('#bonusCard').val('')
             Toast(2500,response.coupon.icon,response.coupon.msg)
@@ -340,34 +333,6 @@
           </div> `
         )
       }
-      {{!-- if(item.coupons.length){
-        if(item.offer_count) $('.products-list').find('.cart-product-item-wrapper').eq(i).find('.offer-and-coupons').append(`<span class="devider"></span>`)
-        $('.products-list').find('.cart-product-item-wrapper').eq(i).find('.offer-and-coupons').append(
-          `<div class="d-inline-flex align-items-center mytooltip-wrapper">
-                <span class="coupon-detail m-0">Coupon Available
-                  <span class="mytooltip top text-nowrap" style="--tooltip-bg: black">
-                  </span>
-                </span>
-              </div>
-          <span class="close-coupon-btn" onclick="removeCoupon('${i}','${item.cartItem_id}','${item.product_id}')">&times;</span>`
-        )
-
-        item.coupons.forEach(coupon => {
-          $('.products-list').find('.cart-product-item-wrapper').eq(i).find('.mytooltip').append(
-            `<div class="d-inline-flex align-items-center">
-              <span>${coupon.coupon_code}</span> : 
-              <span class="text-nowrap">
-                {{#if (eq this.discount_type 'fixed')}}
-                <div class="ms-1 me-1"><span class="price">${coupon.discount_value}</span></div>
-                {{else}}
-                <div class="ms-1 me-1"><span class="percentage text-light">${coupon.discount_value}</span></div>
-                {{/if}}
-              </span>
-            </div>
-            `
-          )
-        })
-      } --}}
 
     })
   }
@@ -395,7 +360,7 @@
         coupon_code: coupons.trim()
       },
       success: function(response) {
-        //console.log(response)
+        
         if(response.success){
           $('.discount-val').html(response.discount)
           $('.grand-total').html(response.total)
@@ -415,7 +380,7 @@
       type: 'DELETE',
       url:  '/remove-coupon',
       success: function(response) {
-        //console.log(response)
+        
         if(response.success){
           $('.discount-val').html(response.discount)
           $('.grand-total').html(response.total)
@@ -441,7 +406,7 @@
         type: 'DELETE',
         url:  `/remove-coupon/${itemId}/${product_id}?${queries}`,
         success: function(response) {
-          console.log(response)
+          
           if(response.success){
             $('.discount-val').html(response.discounts)
             $('.grand-total').html(response.total)

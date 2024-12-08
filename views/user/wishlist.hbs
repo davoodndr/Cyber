@@ -74,12 +74,9 @@
                   {{/if}}
                 </div>
                 <div class="card-icons-wrapper">
-                  <img src="/admin/images/icons/cart_outline.svg" onclick="addToBag('{{@index}}','{{this.product._id}}')" alt="">
+                  <img src="/admin/images/icons/cart_outline.svg" onclick="addToBag('{{@index}}','{{this.product._id}}','{{this._id}}')" alt="">
                 </div>
               </div>
-              {{!-- <div class="buy-button-wrapper">
-                <a href="#" class="buy-now-button">Buy Now</a>
-              </div> --}}
             </div>
           {{else}}
             <div class="d-flex border w-100 justify-content-center rounded py-5">
@@ -120,67 +117,5 @@
     })
   }
 
-  // remove item from wishlist
-  function removeItem(itemId) {
-
-    $.ajax({
-      type: 'DELETE',
-      url:  `/remove-from-wishlist/${itemId}`,
-      success: function(response) {
-        if(response.success){
-          $('.product-row .wishlist-item').eq([response.deletedIndex]).remove()
-          if(response.wishlist_count === 0){
-            window.location.reload()
-          }else{
-            $('.bubble').attr('aria-label', `${response.wishlist_count}`)
-          }
-        }
-      },
-      error: function(error) {
-        console.log(error);
-      }
-    })
-  }
-
-  function addToBag(index,item){
-
-      const user = '{{isLogged}}'
-
-      if(!user){
-        Toast(2500,'error','Please login to add product to cart')
-        return false
-      }
-
-      let data = {
-        product_id: item,
-        /*user_id: user._id,*/
-      }
-      
-      $.ajax({
-        type: 'POST',
-        url: '/add-to-cart?increase=true',
-        data: data,
-        success: function(response) {
-          //console.log(response);
-          if(!response.success){
-            Toast(5000,'error',response.msg).then(() => {
-              // quantity check here to detect if it is button click or input change
-              if(response.quantity) location.reload()  
-            })
-            return false
-          }
-          if(response.success){
-            $('.cart .bubble').attr('aria-label', `${response.values.cart_count}`)
-            $('.cart .bubble').removeClass('hide')
-            removeItem(item._id)
-            Toast(1500,'success','Product added to cart')
-          }
-        },
-        error: function(error) {
-          console.log(error);
-        }
-      })
-    
-    }
 
 </script>

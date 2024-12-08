@@ -167,17 +167,19 @@
 
         <div class="product-row"></div>
 
-        {{!-- <nav class="pagination" aria-label="Pagination">
-          <img id="prevPage" src="https://cdn.builder.io/api/v1/image/assets/TEMP/2de423749e642867f9234165a24938928b2cdf9588d343cd6065b87c0140930f?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="Previous page" class="pagination-arrow" />
+        <nav class="pagination" aria-label="Pagination">
+          <img class="pagination-arrow cursor-pointer" id="prevPage" src="https://cdn.builder.io/api/v1/image/assets/TEMP/2de423749e642867f9234165a24938928b2cdf9588d343cd6065b87c0140930f?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="Previous page"  />
             <div class="page-numbers">
-              <a href="#" class="page-number current-page" aria-current="page">1</a>
+              {{!-- <a href="#" class="page-number current-page" aria-current="page">1</a>
               <a href="#" class="page-number">2</a>
               <a href="#" class="page-number">3</a>
               <span class="page-number">...</span>
-              <a href="#" class="page-number">12</a>
+              <a href="#" class="page-number">12</a> --}}
             </div>
-          <img id="nextPage" src="https://cdn.builder.io/api/v1/image/assets/TEMP/32e251b14d565c4eb407dc8336096dd9c021e5846afae8e292102cae656ec431?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="Next page" class="pagination-arrow" />
-        </nav> --}}
+          <img class="pagination-arrow cursor-pointer" id="nextPage" src="https://cdn.builder.io/api/v1/image/assets/TEMP/32e251b14d565c4eb407dc8336096dd9c021e5846afae8e292102cae656ec431?placeholderIfAbsent=true&apiKey=4312beba142048a48d6010ff440bfdd8" alt="Next page"  />
+          
+        </nav>
+        
       </div>
     </main>
   </div>
@@ -185,6 +187,10 @@
 
 
 <script>
+
+  let currentPage = 1
+  let totalPages = 0
+
   $('.filters').on('click','.collapse-btn', function(e){
     $(this).find('i').toggleClass('rotate')
   })
@@ -245,27 +251,30 @@
     sendData(filters)
   })
 
-  if(cat) sendData(createFilters()) 
-    else sendData({})
+  if(cat) sendData(createFilters(),currentPage) 
+    else sendData({},currentPage)
 
-  function sendData(filters){
-    
+  function sendData(filters,currentPage){
+
     $.ajax({
       type: 'POST',
-      url: '/collections/filter',
+      url: `/collections/filter?page=${currentPage}{{!-- &pageSize=${pageSize} --}}`,
       data: filters,
       beforeSend: function(){
-        $('.loader-bg').addClass('flex')
+        $('.loader-bg').css('display','flex')
       },
       success: function(response){
 
         $('.loader-bg').css('display','none')
 
         let payload = response.payload;
+        totalPages = response.totalPages;
+        currentPage = response.currentPage
         
         if(payload.length > 0){
+
           $('.product-row').html('')
-          
+
           payload.forEach((product,i) => {
             const wishlist = '{{wishlist}}'.split(',')
           
@@ -362,11 +371,48 @@
             </div>
           `)
         }
-        $('.count-value').text(payload.length)
-
+        $('.count-value').text(response.totalOrders)
+        generatePaginationButtons(totalPages,currentPage)
       }
     });
+
+    function generatePaginationButtons(totalPages,currentPage) {
+
+      $('.pagination .page-numbers').empty();
+      
+      // Page buttons
+      for (let i = 1; i <= totalPages; i++) {
+        $('.pagination .page-numbers').append(`<a class="cursor-pointer page-number" data-page="${i}">${i}</a>`);
+        if(i == currentPage){
+          $('.pagination .page-number').eq(i-1).addClass('current-page');
+        }
+      }
+
+    }
+  
   }
+
+  // Handle pagination button click
+  $('.pagination').on('click', '.page-number', function() {
+    currentPage = $(this).data('page');
+    sendData({},currentPage)
+  });
+
+  // Handle "Previous" button click
+  $('.pagination').on('click', '#prevPage', function() {
+    if (currentPage > 1) {
+      currentPage--;
+      sendData({},currentPage);
+    }
+  });
+
+  // Handle "Next" button click
+  $('.pagination').on('click', '#nextPage', function() {
+    if(currentPage < totalPages){
+      currentPage++;
+      sendData({},currentPage);
+    }
+  });
 
   // price filter
   $(function() {
@@ -436,9 +482,8 @@
     });
   }
 
-
   // pagination
-  document.addEventListener('DOMContentLoaded', function () {
+  {{!-- document.addEventListener('DOMContentLoaded', function () {
 
     const content = document.querySelector('.product-row'); 
     const paginationWrapper = document.querySelector('.product-grid')
@@ -494,7 +539,7 @@
     createPageButtons();
     showPage(currentPage);
 
-  })
+  }) --}}
 
 
 </script>

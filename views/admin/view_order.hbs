@@ -42,9 +42,7 @@
 					  </div>
 				  </div>
 				  <div class="d-flex align-items-start gap-2 {{#if (eq order.order_status 'cancelled')}}disable-element{{/if}}">
-						{{!-- <button class="btn btn-outline-secondary btn-sm">
-							Cancel Order
-						</button> --}}
+						
 						<a href="/admin/download-invoice?order={{order._id}}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center invoice-btn">
 							<img src="/admin/images/icons/invoice.svg" class="me-1" alt="">
 							Invoice
@@ -63,7 +61,7 @@
 													<h6 class="mb-1 capitalize {{#if (eq this.item_status 'cancelled')}}line-through{{/if}}">
 														{{this.product_name}}
 													</h6>
-													{{!-- <small class="text-muted">Color: Deep Purple</small> --}}
+													
 											</div>
 										</div>
 										<div class="col-md-4 d-flex justify-content-between align-items-center">
@@ -227,9 +225,6 @@
 					  <img src="/admin/images/icons/avatar_m.png" alt="{{order.billing_address.fullname}}" width="50" height="50" class="rounded-circle">
 					  <span class="capitalize fw-bold">{{order.billing_address.fullname}}</span>
 				  </div>
-				  {{!-- <a href="/user/account" class="arrow-right-up">
-						<img src="/admin/images/icons/arrow-up-right.svg" alt="">
-				  </a> --}}
 			  </div>
 
 			  <div class="d-flex align-items-center justify-content-between py-4 border-bottom">
@@ -237,21 +232,18 @@
 					  <img src="/admin/images/icons/file-text.svg" alt="">
 					  <span class="fw-bold text-black-50" style="font-size: 15px;">{{order.totalOrders}} Orders</span>
 				  </div>
-				  {{!-- <a href="/user/account" class="arrow-right-up">
-						<img src="/admin/images/icons/arrow-up-right.svg" alt="">
-				  </a> --}}
 			  </div>
 
 			  <!-- Contact Info -->
 			  <div class="py-3 d-flex flex-column border-bottom">
 				  <h6 class="mb-3">Contact Info</h6>
-				  <div class="d-inline-flex align-items-center mb-2">
+				  <div class="d-inline-flex w-100 align-items-center mb-2">
 					  <i class="las la-envelope me-2"></i>
-					  <small>andrewjohnson@gmail.com</small>
+					  <small>{{order.billing_address.email}}</small>
 				  </div>
-				  <div class="d-inline-flex align-items-center ">
+				  <div class="d-inline-flex w-100 align-items-center ">
 					  <i class="las la-phone-volume me-2"></i>
-					  <small>+52 5441254</small>
+					  <small>{{order.billing_address.phone}}</small>
 				  </div>
 			  </div>
 

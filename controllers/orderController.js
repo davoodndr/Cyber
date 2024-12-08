@@ -40,7 +40,6 @@ exports.getWishlist = async (req, res) => {
     return newItem
   }))
 
-  //console.log(wishlist)
   res.render('user/wishlist',{
     isLogged: constants.isLogged,
     cartItemsCount: await fn.getCartItemsCount(req.session.user._id),
@@ -51,7 +50,6 @@ exports.getWishlist = async (req, res) => {
 
 exports.addOrRemoveWishlist = async (req, res) => {
 
-  //console.log(req.body)
   const {product} = req.body
   
   const user = await User.findOne({ _id: req.session.user._id });
@@ -88,6 +86,7 @@ exports.removeFromWishlist = async (req, res) => {
   const {item_id} = req.params
   const wishlist = await User.findById(req.session.user._id).populate('wishlist').then(user => user.wishlist)
   let deletedIndex = -1
+
 
   const filtered = wishlist.filter((item,index) => {
     if(item._id.toString() === item_id) deletedIndex = index
@@ -158,7 +157,6 @@ exports.addToCart = async (req, res) => {
   if(cart){
     const existingItem = cart.find(el => el.item === product_id);
     // reassign quantity here for updating stock in product
-    //console.log('existingItem', existingItem)
     if (existingItem) {
       if(increase){
         existingItem.quantity += 1;
@@ -173,7 +171,6 @@ exports.addToCart = async (req, res) => {
         quantity = -(quantity - tempQty);
       }
     } else {
-      //console.log('new item',product_id)
       cart.push({ item: product_id, quantity: 1 });
       quantity = -1;
     }
@@ -185,7 +182,6 @@ exports.addToCart = async (req, res) => {
     quantity = -1;
   }
 
-  //console.log('cart',cart)
   user.cart = cart;
 
   const cartItems = await Promise.all(cart.map(async (cartItem) => {
@@ -355,7 +351,6 @@ exports.getCheckout = async (req, res) => {
 
   const disabledProduct = cartItems.find(item => (item.product_status || item.category_status) !== 'active')
   if(disabledProduct){
-    //return res.send(fn.createToast(false, 'error', 'Some items are disabled, please remove it now'))
     req.session.order_info = fn.sendResponse(400,'Error','error','Please remove invalid products')
     return res.redirect('/user/cart')
   }
@@ -491,7 +486,6 @@ exports.placeOrder = async (req, res) => {
         item.coupons = couponsToReplace
         item.coupon_amount = couponDiscount
       }
-      //item.offer_amount = item.offer_value
       return item
     })
 
@@ -622,19 +616,14 @@ exports.verifyPayment = async (req, res) => {
       order.payment_id = error.metadata.payment_id
       order.razorpay_order_id = error.metadata.order_id
       order.order_status = 'payment pending'
-    /* }else if(handler === 'razorpay-cancel'){
-      confirmSuccess = false */
     }
   }
 
   const finalOrder = failedOrder ? failedOrder : new Order(order);
 
-  console.log('paid_amount',finalOrder.paid_amount)
-
   if(failedOrder){
     await finalOrder.save().then(() => {
       req.session.orderData = null
-      //console.log(response)
       if(handler === 'razorpay-failure'){
         return res.send(fn.sendResponse(false,'Retry Payment','error', 'Please retry payment to complete your order',null,{order_id:finalOrder._id}))
       }
@@ -671,7 +660,6 @@ exports.verifyPayment = async (req, res) => {
       req.session.orderData = null
       req.session.couponsToApply = null
       req.session.couponsToApplyDiscount = null
-      //console.log(response)
       if(handler === 'razorpay-failure'){
         return res.send(fn.sendResponse(false,'Retry Payment','error', 'Please retry payment to complete your order',null,{order_id:finalOrder._id}))
       }
@@ -698,7 +686,6 @@ exports.viewOrder = async (req, res) => {
             .populate('coupon','coupon_code')
             .populate('cart.offers','offer_code')
 
-  //console.log(order_data)
   
   const orderItems = await Promise.all(order_data.cart.map(async (item) => {
     const product = await Product.findById(item.product_id);
@@ -716,7 +703,6 @@ exports.viewOrder = async (req, res) => {
   }));
 
   const order = {
-    /* ...order_data.toObject(), */
     _id: order_data._id,
     order_no: order_data.order_no,
     order_subtotal: order_data.order_subtotal.toFixed(2),
@@ -834,7 +820,7 @@ exports.cancelItem = async (req, res) => {
 
     if(order.cart.length > 1){
       const couponAmount = coupon.max_redeemable / 100 * (itemToCancel.item_total + itemToCancel.item_tax)
-      console.log('couponAmount',returnAmount,couponAmount)
+      
       returnAmount -= couponAmount
     }else{
       returnAmount = returnAmount - itemToCancel.coupon_amount
@@ -879,7 +865,7 @@ exports.cancelItem = async (req, res) => {
       await order.save(),
   
     ]).then((result) => {
-      //console.log('Item cancelled successfully',result)
+      
       return res.send(fn.createToast(true,'success', 'Item cancelled successfully'))
     }).catch(err => {
       console.log(err)
@@ -891,7 +877,7 @@ exports.cancelItem = async (req, res) => {
       await order.save(),
   
     ]).then((result) => {
-      //console.log('Item cancelled successfully',result)
+      
       return res.send(fn.createToast(true,'success', 'Item cancelled successfully'))
     }).catch(err => {
       console.log(err)
@@ -900,7 +886,6 @@ exports.cancelItem = async (req, res) => {
 }
 
 exports.downloadInvoice = async (req,res) => {
-
 
   const totalOrders = await Order.countDocuments({user_id:req.session.user._id});
   const order_data = await Order.findById(req.query.order)
@@ -977,7 +962,9 @@ exports.retryPayment = async (req,res) => {
     result.name = order.billing_address.fullname
   }
 
-  const orderDatas = {order,walletTotal:0,updatedCoupons:[],transactions:[],cartItems:[]}
+  const user = req.session.user;
+
+  const orderDatas = {order,walletTotal:user.wallet,updatedCoupons:user.coupons,transactions:[],cartItems:[]}
 
   req.session.orderData = orderDatas;
 

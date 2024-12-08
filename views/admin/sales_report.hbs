@@ -214,10 +214,10 @@
           </select>
         </form>
         <span class="me-5">{{currentPage}} / {{totalPages}}</span>
-        <a class="cursor-pointer me-3 previous" {{!-- href="{{#if (gt currentPage 1)}}?page={{subtract currentPage 1}}&limit={{page_limit}}&{{json2query filter}}{{/if}}"  --}}>
+        <a class="cursor-pointer me-3 previous">
           <i class="las la-angle-left"></i>
         </a>
-        <a class="cursor-pointer next" {{!-- href="{{#if (lt currentPage totalPages)}}?page={{add currentPage 1}}&limit={{page_limit}}&{{json2query filter}}{{/if}}" --}}>
+        <a class="cursor-pointer next">
           <i class="las la-angle-right"></i>
         </a>
       </div>
@@ -242,13 +242,11 @@
 
   $('.end-date').on('changeDate',function(e){
 
-    //console.log(new Date(e.date) < convertedDate($('.date.start-date > input').val()))
-
     if(new Date(e.date) > convertedDate($('.date.start-date > input').val())){
       const url = `/admin/sales-report?custom=true&endtDate=${new Date(e.date).toLocaleDateString().replaceAll('/','-')}&startDate=${$('.date.start-date > input').val()}`
       window.location.href = url
     }else{
-      //console.log(new Date(e.date),convertedDate($('.date.start-date > input').val()))
+    
       if(new Date(e.date) < convertedDate($('.date.start-date > input').val())){
         Swal.fire({
           title: 'Invalid Date Range',

@@ -2,7 +2,7 @@ const moment = require('moment');
 
 module.exports = {
   formatDate: function (date, format) {
-    return moment.utc(date).format(`${format}`);
+    return moment.parseZone(date).format(`${format}`);
   },
   subtract: function (a, b) {
     return a - b;
@@ -73,9 +73,7 @@ module.exports = {
     return true;
   },
   arrayMatch: function(array, search, value1, value2){
-    //console.log('arr -',array, 'search - ', search,value1,value2)
     if (!Array.isArray(array) || array.length === 0) {
-      //console.warn('Provided array is not valid or empty.');
       return value2;
     }
     const find = array.filter(item => item.toString() === search.toString());

@@ -6,8 +6,7 @@
   <title>Cyber E-Commerce</title>
 
   {{!-- links --}}
-  
-  
+    
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.1/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css"/>
@@ -79,8 +78,8 @@
 <body>
 
   {{#if isAdmin}}
-    <div class="container-fluid centered-container overflow-hidden">
-      <div class="row h-100">
+    <div class="container-fluid centered-container admin-wrapper overflow-hidden">
+      <div class="row w-100 h-100">
         {{!-- show navbar --}}
         {{> navbar}}
 
@@ -92,6 +91,7 @@
         </aside>
       </div>
     </div>
+    {{> loader}}
   {{else}}
     
     {{> user_header}}
@@ -425,8 +425,6 @@
     // template if not working
     let user = undefined
     user = '{{{json user}}}'
-
-    //console.log(user)
     
     $('#addAddress').on('show.bs.modal', function(event){
       const btnVal = $(event.relatedTarget).data('val')
@@ -436,7 +434,7 @@
     $('#selectAddress').on('show.bs.modal', function (event) {
       const btn = $(event.relatedTarget).data('val')
       $('.address-select-container').attr('aria-label',btn)
-      //console.log($('.address-select-container').attr('aria-label'))
+      
       if(user){
         user = typeof user === 'string' ? JSON.parse(user) : user
         $('.address-select-container .address-box').each((i, box) => {
@@ -454,7 +452,7 @@
   
     // select address
     function selectAddress(id, index){
-      //console.log(id,index)
+      
       const type = $('.address-select-container').attr('aria-label')
       $.ajax({
         type: 'post',
@@ -625,11 +623,72 @@
             }else{
               $('.wishlist .bubble').addClass('hide')
             }
+            location.reload()
           }
         }
       })
     }
 
+    function addToBag(index,product,item){
+
+      const user = {{#if isLogged}}{{isLogged}}{{else}}undefined{{/if}}
+
+      if(!user){
+        Toast(2500,'error','Please login to add product to cart')
+        return false
+      }
+
+      let data = {
+        product_id: product,
+      }
+      
+      $.ajax({
+        type: 'POST',
+        url: '/add-to-cart?increase=true',
+        data: data,
+        success: function(response) {
+          if(!response.success){
+            Toast(5000,'error',response.msg).then(() => {
+              // quantity check here to detect if it is button click or input change
+              if(response.quantity) location.reload()  
+            })
+            return false
+          }
+          if(response.success){
+            $('.cart .bubble').attr('aria-label', `${response.values.cart_count}`)
+            $('.cart .bubble').removeClass('hide')
+            removeItem(item)
+            Toast(1500,'success','Product added to cart')
+          }
+        },
+        error: function(error) {
+          console.log(error);
+        }
+      })
+    
+    }
+
+    // remove item from wishlist
+  function removeItem(itemId) {
+
+    $.ajax({
+      type: 'DELETE',
+      url:  `/remove-from-wishlist/${itemId}`,
+      success: function(response) {
+        if(response.success){
+          $('.product-row .wishlist-item').eq([response.deletedIndex]).remove()
+          if(response.wishlist_count === 0){
+            window.location.reload()
+          }else{
+            $('.bubble').attr('aria-label', `${response.wishlist_count}`)
+          }
+        }
+      },
+      error: function(error) {
+        console.log(error);
+      }
+    })
+  }
 
     /* Payment Section */
     function razorpayPayment(order) {
@@ -661,17 +720,10 @@
             response.amount = order.amount
             verifyPayment(response)
           },
-          modal: {
-            ondismiss: function() {
-              console.log('Modal dismissed.');
-            }
-          },
           retry: {
             enabled: false,
           },
         };
-
-        console.log(options)
 
         const rzp = new Razorpay(options);
         rzp.on('payment.failed',function(response){

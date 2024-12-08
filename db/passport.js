@@ -15,7 +15,7 @@ passport.use(new GoogleStrategy({
     }else{
       const mail = profile.emails[0].value;
       const existUser = await User.findOne({email:mail})
-      console.log(existUser.user_status)
+      
       if(existUser) {
         const updatedUser = await User.findOneAndUpdate({email:mail},{
           $set:{

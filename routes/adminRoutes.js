@@ -13,7 +13,7 @@ const {uploadImages, resizeImages} = require('../controllers/imageUploadControll
 /* Admin */
 router.get('/login',middleware.isLogin,adminController.getLogin)
 router.post('/doLogin',adminController.doLogin)
-router.get('/dashboard'/* ,middleware.checkSession */,adminController.getDashboard)
+router.get('/dashboard',middleware.checkSession,adminController.getDashboard)
 router.get('/logout',middleware.checkSession,adminController.logout)
 
 /* Users */
@@ -33,15 +33,13 @@ router.get('/category/clear-session',categoryController.clearSession)
 /* Products */
 router.get('/products',middleware.checkSession,productController.getProducts)
 router.get('/add-product',middleware.checkSession,productController.addProduct)
-//router.post('/save-draft',productController.saveDraft)
-router.post('/publish-product',uploadImages,resizeImages,productController.publishProduct)
+router.post('/publish-product',uploadImages,productController.publishProduct)
 router.get('/products/:slug/edit',middleware.checkSession,productController.editProduct)
 router.delete('/products/:slug/delete',middleware.checkSession,productController.deleteProduct)
 router.post('/products/:slug/delete-image',middleware.checkSession,productController.deleteProductImage)
 router.patch('/products/:slug/restore',productController.restoreProduct)
-router.post('/products/:slug/update',uploadImages,resizeImages,productController.updateProduct)
+router.post('/products/:slug/update',uploadImages,productController.updateProduct)
 router.get('/products/clear-session/:status',productController.clearSession)
-//router.get('/login',productController.getProducts)
 
 /* Orders */
 router.get('/orders',middleware.checkSession,orderController.getOrders)
@@ -74,8 +72,5 @@ router.get('/get-items/:item',offerController.getItmes)
 router.get('/sales-report',middleware.checkSession,reportController.getReport)
 router.get('/download-report-pdf',middleware.checkSession,reportController.downloadPDF)
 router.get('/download-report-excel',middleware.checkSession,reportController.downloadEXCEL)
-
-/* Insert Data */
-//router.get('/insert-data',adminController.inserData)
 
 module.exports = router

@@ -1,10 +1,3 @@
-/* const checkSession = (req,res,next) => {
-  if(req.session.user){
-    next()
-  }else{
-    res.redirect('/')
-  }
-} */
 
 const checkAccess = (req,res,next) => {
   const user = req.session.user;
@@ -26,7 +19,6 @@ const isLogin = (req,res,next) => {
 
 
 module.exports = {
-  /* checkSession, */
   checkAccess,
   isLogin
 }

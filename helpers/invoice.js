@@ -17,8 +17,6 @@ async function createInvoice(invoice) {
       reject(err);
     });
 
-    //invoice = JSON.parse(invoice.order.replace(/&quot;/ig,'"').replace(/\\/ig,'\\').replace(/[\x00-\x1F\x7F]/g, ''));
-
     generateHeader(doc);
     generateCustomerInformation(doc, invoice);
     generateInvoiceTable(doc, invoice);

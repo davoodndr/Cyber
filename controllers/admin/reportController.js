@@ -225,8 +225,6 @@ const formatReport = function(data, filter,format){
       if(date === 'Invalid date') date = '00-00-00'
     }
 
-    //console.log('item',item)
-
     const partialOrder = item.order_status.find(status => status === 'partially cancelled')
 
     if(partialOrder){
@@ -263,215 +261,9 @@ const formatReport = function(data, filter,format){
   })
 }
 
-/* const getFilteredOrders = async (filter,orderType) => {
-
-  let {startDate = moment(),endDate = moment()} = filter
-  let match = {}, projection = {},group = {_id:null}
-  let dateFormat = 'DD-MM-YYYY'  // for foramt graph
-  let format = 'DD-MM-YYYY'
-
-  //default assign
-  filter.today = true
-
-  if(filter.today){
-    startDate = moment(),endDate = moment()
-  }
-  if(filter.daily || filter.weekly || filter.monthly || filter.yearly){
-    startDate = null
-    endDate = moment()
-  }
-  if(filter.yesterday){
-    startDate = moment().subtract(1,'days')
-    endDate = moment().subtract(1,'days')
-  }
-  moment.updateLocale('en', {
-    week: { dow: 0 } // dow: 0 means Sunday is the first day of the week
-  });
-  if(filter.thisWeek){
-    startDate = moment().startOf('week')
-    endDate = moment().endOf('week')
-    format = 'DD ddd'
-  }
-  if(filter.thisMonth){
-    startDate = moment().startOf('month')
-    endDate = moment().endOf('month')
-    format = 'DD ddd'
-  }
-  if(filter.thisYear){
-    startDate = moment().startOf('year')
-    endDate = moment().endOf('year')
-    format = 'MMM'
-  }
-
-  // generally projuction take day
-  
-  orderType ? match = orderType : {};
-
-  if(startDate && endDate){
-    startDate = moment(startDate, dateFormat).startOf('day').toDate();
-    endDate = moment(endDate,dateFormat).endOf('day').toDate()
-    match.createdAt = { $gte: startDate, $lte: endDate };
-
-    if(moment(endDate).diff(moment(startDate),'days') === 0){
-      projection = {timeOfDay: {$dateToString: { format: "%H:%M:%S", date: "$createdAt" } } }
-      group._id = "$timeOfDay"
-      format = 'hh:mm A'
-    }
-  }
-
-  if(filter.daily || filter.thisWeek){
-    projection = {day: {$dateToString: { format: "%d-%m-%Y", date: "$createdAt" } }}
-    group._id = "$day"
-  }
-
-  if(filter.weekly || filter.thisMonth){
-    projection = {
-      year: { $year: "$createdAt" },
-      week: { $isoWeek: "$createdAt" }
-    }
-    group._id = { year: "$year", week: "$week" }
-    format = 'DD/MM'
-  }
-
-  if(filter.monthly || filter.thisYear){
-    projection = {
-      year: { $year: "$createdAt" },
-      month: { $month: "$createdAt" }
-    }
-    group._id = { year: "$year", month: "$month" }
-    format = 'MMM-YY'
-  }
-
-  if(filter.yearly){
-    projection.year = { $year: "$createdAt" }
-    group._id = "$year"
-    format = 'YYYY'
-  }
-
-  //console.log('match',match,'filter',filter, 'projection',projection,'group',group)
-
-  const result = await Order.aggregate([
-    { $match: {...match}},
-    { $project: 
-      {
-        ...projection,
-        total_amount: {$subtract : ["$order_total","$tax"]}, order_subtotal:1, tax:1, discounts:1,
-        subtotal: { $sum: ["$order_subtotal"]},
-        items: {$sum: "$cart.quantity"}
-      } 
-    },
-    { $group: 
-      {
-        ...group,
-        subtotal: { $sum: "$subtotal" },
-        tax: {$sum: "$tax"},
-        discounts: { $sum: "$discounts" },
-        revenue: { $sum: "$total_amount" },
-        orders: { $sum: 1 },
-        sold_items: {$sum: "$items" },
-      } 
-    },
-    {$sort: {_id: 1}},
-    {
-      $facet : {
-        filtered: [
-          ...(filter.skip ? [{$skip: filter.skip}] : []),
-          ...(filter.limit ? [{$limit: filter.limit}] : [])
-        ],
-        total: [
-          { 
-            $group: {
-              _id: null,
-              total_subtotal: { $sum: "$subtotal" },
-              total_tax: {$sum: "$tax"},
-              total_discounts: { $sum: "$discounts" },
-              total_revenue: { $sum: "$revenue" },
-              total_orders: { $sum: "$orders" },
-              total_sold_items: { $sum: "$sold_items" },
-              count: {$sum: 1}
-            }
-          }
-        ]
-      }
-    }
-  ]);
-
-  if(result[0].filtered.length === 0) {
-    result[0].filtered = [{
-      subtotal: 0,
-      tax: 0,
-      discounts: 0,
-      revenue: 0,
-      orders: 0,
-      sold_items: 0,
-      date: '00-00-00'
-    }]
-    result[0].total = [{
-      total_subtotal: 0,
-      total_tax: 0,
-      total_revenue: 0,
-      total_discounts: 0,
-      total_orders: 0,
-      total_sold_items: 0,
-      count:0
-    }]
-  }
-
-  return {
-    filtered: getFormatedReport(result[0].filtered, filter, format),
-    total: result[0].total.map(item => {
-      return {
-        sales: item.total_subtotal.toFixed(2),
-        tax: item.total_tax.toFixed(2),
-        discounts: item.total_discounts.toFixed(2),
-        revenue: item.total_revenue.toFixed(2),
-        orders: item.total_orders,
-        sold_items: item.total_sold_items,
-        count: item.count
-      }
-    })
-  }
-}
-
-const getFormatedReport = function(data, filter,format){
-  
-  data.sort((a,b) => moment(a._id,format).valueOf() - moment(b._id,format).valueOf())
-
-  return data.map(item => {
-    let date = null
-    if(filter.weekly || filter.thisMonth){
-      const start = moment().year(item._id.year).week(item._id.week).startOf('week').format(format)
-      const end = moment().year(item._id.year).week(item._id.week).endOf('week').format(format)
-      date = `${start} - ${end} (${item._id.year})`
-    }else if(filter.monthly || filter.thisYear){
-      const start = moment().year(item._id.year).month(item._id.month).startOf('month').format(format)
-      date = start
-    }else if(filter.yearly){
-      date = moment().year(item._id).format(format)
-    }else{
-      let itemFormat = fn.checkDateOrTime(item._id)
-      itemFormat = itemFormat === 'date' ? 'DD-MM-YYYY' : 'HH:mm:ss'
-      date = moment.parseZone(item._id,itemFormat).format(format)
-      if(date === 'Invalid date') date = '00-00-00'
-    }
-    
-    return {
-      sales: item.subtotal.toFixed(2),
-      tax: item.tax.toFixed(2),
-      discounts: item.discounts.toFixed(2),
-      revenue: item.revenue.toFixed(2),
-      orders: item.orders,
-      sold_items: item.sold_items,
-      date
-    }
-  })
-} */
-
 exports.downloadPDF = async(req,res) => {
 
   let filters = req.query
-  /* filters.skip = 0
-  filters.limit = 0 */
   const report = await getSalesReport(filters,null);
 
   const pdfData = await generatePDF(report,req.query);
@@ -511,6 +303,8 @@ const generatePDF = async (salesData,filter) => {
 function generateHeader(doc,query) {
 
   let {skip = 1,limit = 5,page = 1,startDate= '', endDate= '',...filter} = query
+  // filter empty while not selected any thing, set it as today
+  filter = Object.keys(filter).length > 0 ? filter : {today: true}
 
   const dynamicTitle = Object.keys(filter)[0].charAt(0).toUpperCase() + Object.keys(filter)[0].slice(1).toLowerCase()
 
@@ -685,11 +479,6 @@ const generateExcel = (salesData,filter) => {
   });
 
   // ₹ symbol not supported
-  /* worksheet.getColumn('sales').numFmt = '#,##0.00';
-  worksheet.getColumn('tax').numFmt = '#,##0.00';
-  worksheet.getColumn('discounts').numFmt = '#,##0.00';
-  worksheet.getColumn('revenue').numFmt = '#,##0.00'; */
-
 
   worksheet.addRow({
     date: "",
@@ -723,8 +512,6 @@ const generateExcel = (salesData,filter) => {
 
 exports.downloadEXCEL = async (req, res) => {
   let filters = req.query
-  /* filters.skip = 0
-  filters.limit = 0 */
   const report = await getSalesReport(filters,null);
 
   const workbook = generateExcel(report,req.query);

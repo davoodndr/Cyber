@@ -232,12 +232,9 @@
                   {{/if}}
                 </div>
                 <div class="card-icons-wrapper">
-                  <img src="/admin/images/icons/cart_outline.svg" onclick="addToCart('{{this.product._id}}')" alt="">
+                  <img src="/admin/images/icons/cart_outline.svg" onclick="addToBag('{{@index}}','{{this.product._id}}','{{this._id}}')" alt="">
                 </div>
               </div>
-              {{!-- <div class="buy-button-wrapper">
-                <a href="#" class="buy-now-button">Buy Now</a>
-              </div> --}}
             </div>
             {{else}}
               <div class="d-flex border w-100 justify-content-center rounded py-5">
@@ -786,7 +783,7 @@
       url: `/add-profile-info${query}`,
       data: data,
       success: function(res){
-        console.log('res',res)
+        
         Toast(2000,res.icon,res.msg).then(()=>{
           if(res.status == 201){
             location.reload()
@@ -817,14 +814,13 @@
         type: 'GET',
         url: `/delete-address/${id}`,
         success: function(res){
-          console.log(res)
+          
           if(res.status == 200){
             location.reload()
             Toast(1500,res.icon,res.msg)
           }
         }
       })
-      //activateTab('address-tab')
     })
   }
 
@@ -857,11 +853,7 @@
         $.ajax({
           type: 'GET',
           url: `/clear-session/${status}?redirect=true`,
-          success: function(res){
-            /*if(res.status = 201 || res.redirect){
-              location.reload()
-            }*/
-          },
+          success: function(res){},
         })
       }
     }

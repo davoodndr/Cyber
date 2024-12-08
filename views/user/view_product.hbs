@@ -100,19 +100,6 @@
           </div>
         </div>
       {{/each}}
-
-      {{!-- <div class="color-selection">
-        <span class="color-label">Select color:</span>
-        <div class="color-options">
-          {{#each product.variants}}
-            {{#if (eq this.var_name 'Color')}}
-              <label class="d-inline-flex border rounded px-3 py-2">
-                <input type="checkbox" class="form-check-input me-2"> {{this.var_option}}
-              </label>
-            {{/if}}
-          {{/each}}
-        </div>
-      </div> --}}
         
         <div class="memory-options">
           {{#each product.variants}}
@@ -348,9 +335,6 @@
               <img src="/admin/images/icons/cart_outline.svg" alt="">
             </div>
           </div>
-          {{!-- <div class="buy-button-wrapper">
-            <a href="#" class="buy-now-button">Buy Now</a>
-          </div> --}}
         </div>
       {{/each}}
     </div>
@@ -382,8 +366,8 @@
               focusOnSelect: true,
               vertical:true,
               verticalSwiping:true,
-              /*prevArrow: '<button type="button" class="slick-prev"><i class="las la-angle-left"></i></button>',
-              nextArrow: '<button type="button" class="slick-next"><i class="las la-angle-right"></i></button>'*/
+              {{!-- prevArrow: '<button type="button" class="slick-prev"><i class="las la-angle-left"></i></button>',
+              nextArrow: '<button type="button" class="slick-next"><i class="las la-angle-right"></i></button>' --}}
           });
 
           // Remove active class from all thumbnail slides
@@ -452,9 +436,6 @@
               event.stopPropagation();
           });
       };
-      /* WOW active */
-      //new WOW().init();
-
       //Load functions
       $(document).ready(function () {
           productDetails();
@@ -466,7 +447,6 @@
     $('.btn-add-cart').on('click', function(e){
       const user = '{{{json user}}}'
 
-      //console.log(user)
 
       if(!user){
         Toast(2500,'error','Please login to add product to cart')
@@ -476,7 +456,6 @@
       let productId = '{{product._id}}'
       let data = {
         product_id: productId,
-        /*user_id: user._id,*/
       }
       
       $.ajax({
@@ -484,7 +463,7 @@
         url: '/add-to-cart?increase=true',
         data: data,
         success: function(response) {
-          console.log(response);
+          
           if(!response.success){
             Toast(5000,'error',response.msg).then(() => {
               // quantity check here to detect if it is button click or input change

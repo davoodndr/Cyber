@@ -11,11 +11,6 @@ const transactionModel = mongoose.Schema({
     required: true,
     unique: true,
   },
-  /* payment_method: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'paymentMethod',
-    required: true
-  }, */
   payment_method: String,
   transaction_type: {
     type: String,

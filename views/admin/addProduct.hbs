@@ -247,57 +247,68 @@
   /* File input */
   let cropper;
   let imageFiles = [], croppedFiles = [], variantTypes = [], variantOptions = [];
+  let imgs = {{#if product_values.images}} {{{json product_values.images}}} {{else}} undefined {{/if}};
 
   // insert images to board
   $('#imageInput').on('change',function(e){
+
+    const allowedImageTypes = ['image/jpeg','image/jpg', 'image/png', 'image/bmp'];
+
     $('.media-thumb-container div.thumb-place-holder').remove()
     const files = Array.from(e.target.files);
     $('#cropper').attr('src',URL.createObjectURL(files[0]))
-    files.forEach((file,i) => {
+
+    for(let i = 0; i < files.length; i++){
+      const file = files[i];
+        if(!allowedImageTypes.includes(file.type)){
+          Swal.fire({
+            title: 'Error',
+            text: `File type '${file.type}' is not supported`,
+            icon: 'error',
+            confirmButtonText: 'Okay'
+          })
+          $('#cropper').attr('src','/admin/images/icons/upload_icon.png')
+          $('.media-thumb-container').append(
+            `<div class="media-thumb-wrapper thumb-place-holder border rounded-4 mb-2">
+              <img class="img-fluid p-4" src="/admin/images/icons/image_add.png" alt="">
+            </div>`
+          )
+          return false
+        }
+
+        const ind = imageFiles.length ? imageFiles.length + i : i;
+
         const reader = new FileReader();
-        reader.index = i
+        reader.index = ind
         reader.onload = (event) => {
             // Show the cropping modal
             $('.media-thumb-container').append(`<div class="media-thumb-wrapper border rounded-4 mb-2">
-                    <a id="btn-delete-thumb" class="btn btn-danger position-absolute end-0 top-0 py-0 px-1 rounded-5">
-                      <i class="lar la-trash-alt"></i>
-                    </a>
-                    <img src="${event.target.result}" alt="">
-                  </div>`)
+                <a id="btn-delete-thumb" class="btn-thumb-delete">
+                  <i class="lar la-trash-alt"></i>
+                </a>
+                <img src="${event.target.result}" alt="">
+              </div>`)
 
             // Save image file for later use
-            file.index = i
+            file.index = ind
             imageFiles.push(file);
         };
         reader.readAsDataURL(file);
-    });
+    };
   })
 
   // show crop view on thumbnail click
   $('.media-thumb-container').on('click','div.media-thumb-wrapper',async function(e){
-    const ind = $(this).index()
-
-    // get file from src and conver in to image while already uploaded
-    if($(this).hasClass('reloader')){
-      const src = $(this).children('img')[0].src
-      await fetch(src, {mode:'no-cors'})
-      .then(response => {
-        return response.blob()
-      }).then(blob => {
-        const fileFormServer = new File([blob],src.split('/').pop());
-        
-        fileFormServer.index = ind
-        imageFiles.push(fileFormServer)
-      })
-    }
     
-    const file = imageFiles[ind]
+    const ind = $(this).index()
+    
+    const file = imageFiles.find(file => file.index === ind)
     const reader = new FileReader();
     reader.onload = function(event){
       showCropper(event,ind)
     }
-    
     reader.readAsDataURL(file);
+
   })
 
   function showCropper(event,index){
@@ -320,16 +331,16 @@
   }
 
   // load images from db
-  let imgs = '{{product_values.images}}';
+  
   if(imgs){
-    imgs = imgs.split(',')
+
     $('.media-thumb-container div.thumb-place-holder').remove()
     imgs.forEach(async function(img, i) {
       $('.media-thumb-container').append(`<div class="media-thumb-wrapper reloader border rounded-4 mb-2">
-        <a id="btn-delete-thumb" class="btn btn-danger position-absolute end-0 top-0 py-0 px-1 rounded-5">
+        <a id="btn-delete-thumb" class="btn-thumb-delete">
           <i class="lar la-trash-alt"></i>
         </a>
-        <img src="${img}" alt="">
+        <img src="${img.base64}" alt="">
       </div>`)
       
       const imgContainer = $($('.media-thumb-container')[i]).find('img')[0];
@@ -344,17 +355,29 @@
           $('#cropper').attr('src',URL.createObjectURL(fileFormServer))
         })
       }
+
+      const imgFile = new File([base64ToBlob(img.base64)],img.filename,{type: 'image/jpg'})
+      imgFile.index = i
+      imageFiles.push(imgFile)
+      croppedFiles.push(imgFile)
     })
   }
+  
   // crop image
   $('#crop-btn').on('click',function(e){
 
     const canvas = cropper.getCroppedCanvas();
     const filename = imageFiles[cropper.index].name;
     canvas.toBlob(blob => {
+      const fileFormServer = croppedFiles.map(file => file.name)
+      if(fileFormServer.includes(filename)){
+        croppedFiles = croppedFiles.filter(file => file.name !== filename)
+      }
       const croppedFile = new File([blob],filename,{type: 'image/jpg'});
       croppedFile.index = cropper.index
       croppedFiles.push(croppedFile)
+      
+      // update thumbnail in viewer
       let thumbViewer = $($('.media-thumb-container').children()[cropper.index]).children('img')[0]
       thumbViewer.src = URL.createObjectURL(croppedFile)
       cropper.destroy()
@@ -699,7 +722,6 @@
 
   // remove variant table row
   $('.add-variant-table tbody').on('click','a', function(e){
-    
     $(this).closest('tr').remove();
   })
 
@@ -715,7 +737,6 @@
 
     let data = new FormData(document.getElementById('add-product-form'))
     croppedFiles.forEach(file => {
-      
       data.append('images',file)
     })
 
@@ -727,13 +748,13 @@
       body: data,
       
     }).then(res => res.json()).then(res => {
-      console.log('final',res) 
+      
       Swal.fire({
         title: res.title,
         text: res.msg,
         icon: res.icon,
       }).then(async ()=>{
-        $('.loader-bg').css('display','flex')
+        $('.loader-bg').css('display','none')
         if(res.status == 201){
           croppedFiles = []
         }
@@ -742,10 +763,26 @@
           .then(resp => resp.json()).then(resp => window.location.reload())
       });
     }).catch(err =>{
-      $('.loader-bg').css('display','flex')
+      $('.loader-bg').css('display','none')
       console.log(err)
     });
       
   })
+
+  function base64ToBlob(base64, mimeType) {
+    const base64Data = base64.split(',')[1];
+    const binaryData = atob(base64Data);
+    const byteArrays = [];
+    for (let offset = 0; offset < binaryData.length; offset++) {
+      const byte = binaryData.charCodeAt(offset);
+      byteArrays.push(byte);
+    }
+
+    // Create a Blob from the byte arrays
+    const byteArray = new Uint8Array(byteArrays);
+    const blob = new Blob([byteArray], { type: mimeType });
+
+    return blob;
+  }
 
 </script>

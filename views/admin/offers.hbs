@@ -341,9 +341,7 @@
                   <label for="review-title">Available Products<span class="text-danger fs-6">*</span></label>
                   <select class="select-applicable-items1 form-select {{#if offer_info.applied_items}}is-invalid{{/if}}"
                      name="applied_items[]" id="select-items" multiple="multiple">
-                    {{!-- {{#each products}}
-                    <option value="{{this._id}}">{{this.product_name}}</option>
-                    {{/each}} --}}
+                    
                   </select>
                   {{#if offer_info.applied_items}}<span class="invalid-feedback">{{offer_info.applied_items}}</span>{{/if}}
                 </div>
@@ -379,7 +377,7 @@
   });
 
   let status = '{{offer_info.status}}' || '{{offer_info.success}}' || '{{offer_info.error}}';
-  //console.log(status)
+  
   // show actions on statuses
   if(status){
     if(status == 400){
@@ -552,8 +550,6 @@
   $('#btn-update-offer').click(function (){
     const applied_items = $('#select-items').val().length === 0 ? '&applied_items=' : ''
     let data = `${$('#update-offer-form').serialize()}${applied_items}`
-    
-    console.log($(this).attr('aria-label'))
 
     $.ajax({
       type: 'PUT',

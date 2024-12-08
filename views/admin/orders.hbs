@@ -5,9 +5,6 @@
   <!-- header -->
   <div class="mb-5 title-wrapper">
     <h4>Orders ({{total_items}})</h4>
-    {{!-- <a href="/admin/add-product" class="create-btn">
-      Create New
-    </a> --}}
   </div>
   <!-- Table -->
   <div class="table-wrapper">
@@ -134,12 +131,6 @@
                         <span>Cancelled</span>
                       </a>
                     </li>
-                    {{!-- <li>
-                      <a href="/admin/change-status/{{this._id}}/return">
-                        <img src="/admin/images/icons/order-return-color.svg" alt="">
-                        <span>Returned</span>
-                      </a>
-                    </li> --}}
                   </ul>
                 </div>
               </div>
@@ -177,7 +168,7 @@
 <script>
 
   let info = '{{{json order_info}}}' ? JSON.parse('{{{json order_info}}}') : ''
-  //console.log(info)
+
   // show actions on statuses
   if(info && info.status){
     Toast(1500, info.icon,info.msg)

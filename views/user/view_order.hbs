@@ -256,13 +256,13 @@
 			  <!-- Contact Info -->
 			  <div class="py-3 border-bottom">
 				  <h6 class="mb-3">Contact Info</h6>
-				  <div class="d-inline-flex align-items-center mb-2">
+				  <div class="d-inline-flex w-100 align-items-center mb-2">
 					  <i class="las la-envelope me-2"></i>
-					  <small>andrewjohnson@gmail.com</small>
+					  <small>{{order.billing_address.email}}</small>
 				  </div>
-				  <div class="d-inline-flex align-items-center ">
+				  <div class="d-inline-flex w-100 align-items-center ">
 					  <i class="las la-phone-volume me-2"></i>
-					  <small>+52 5441254</small>
+					  <small>{{order.billing_address.phone}}</small>
 				  </div>
 			  </div>
 
