@@ -73,11 +73,10 @@ const orderSchema = mongoose.Schema({
     ref: 'user',
     required: true
   },
-  payment_method: String,
-  /* payment_method: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'payment_method',
-  }, */
+  payment_method: {
+    type: String,
+    defaut: 'cod'
+  },
   payment_status: {
     type: String,
     enum: ['unpaid', 'paid', 'failed'],

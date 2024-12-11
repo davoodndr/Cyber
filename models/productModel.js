@@ -36,7 +36,10 @@ const productSchema = new mongoose.Schema({
       default: 0
     }
   },
-  stock: Number,
+  stock: {
+    type: Number,
+    default: 0
+  },
   brand: String,
   category:{
     type: mongoose.Schema.Types.ObjectId,

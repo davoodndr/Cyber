@@ -236,8 +236,24 @@
   $('.end-date').datepicker('setDate', '{{filter.endDate}}' ? '{{filter.endDate}}' : new Date())
 
   $('.start-date').on('changeDate',function(e){
-    const url = `/admin/sales-report?custom=true&startDate=${new Date(e.date).toLocaleDateString().replaceAll('/','-')}&endDate=${$('.date.end-date > input').val()}`
-    window.location.href = url
+    
+    if(new Date(e.date) < convertedDate($('.date.end-date > input').val())){
+      const url = `/admin/sales-report?custom=true&startDate=${new Date(e.date).toLocaleDateString().replaceAll('/','-')}&endDate=${$('.date.end-date > input').val()}`
+      window.location.href = url
+    }else{
+      if(new Date(e.date).setHours(0,0,0,0) > convertedDate($('.date.end-date > input').val())){
+        Swal.fire({
+          title: 'Invalid Date Range',
+          text: 'Start date should be less than or equal to end date',
+          icon: 'error',
+          confirmButtonText: 'Okay'
+        }).then(() => {
+          $(this).datepicker('setDate',new Date())
+          dateReset = true;
+        })
+      }
+    }
+
   })
 
   $('.end-date').on('changeDate',function(e){
@@ -247,7 +263,7 @@
       window.location.href = url
     }else{
     
-      if(new Date(e.date) < convertedDate($('.date.start-date > input').val())){
+      if(new Date(e.date).setHours(0,0,0,0) < convertedDate($('.date.start-date > input').val())){
         Swal.fire({
           title: 'Invalid Date Range',
           text: 'End date should be greater than or equal to start date',
@@ -264,7 +280,7 @@
 
   function convertedDate(date){
     const [day, month, year] = date.split('-');
-    return new Date(year, month-1, day);
+    return new Date(year, month-1, day).setHours(0,0,0,0);
   }
 
   const currentPage = {{currentPage}}

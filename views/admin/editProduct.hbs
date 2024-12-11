@@ -314,7 +314,7 @@
     if(e.target.localName === 'img'){
       const ind = $(this).children().index(e.target.parentElement)
       const src = e.target.currentSrc
-      const file = imageFiles[ind]
+      const file = imageFiles.find(file => file.index === ind)
       const reader = new FileReader();
       reader.onload = function(event){
         showCropper(event,ind)

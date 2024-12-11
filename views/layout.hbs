@@ -657,7 +657,7 @@
           if(response.success){
             $('.cart .bubble').attr('aria-label', `${response.values.cart_count}`)
             $('.cart .bubble').removeClass('hide')
-            removeItem(item)
+            removeWishlistItem(item)
             Toast(1500,'success','Product added to cart')
           }
         },
@@ -669,7 +669,7 @@
     }
 
     // remove item from wishlist
-  function removeItem(itemId) {
+  function removeWishlistItem(itemId) {
 
     $.ajax({
       type: 'DELETE',

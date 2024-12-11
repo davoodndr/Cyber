@@ -459,10 +459,10 @@ const formatReport = function(data, filter,format){
       item.isRefunded.forEach((el,index) => {
         // checking is refunded
         if(el === true){
-          item.quantity = item.quantity.filter((el,i)=> i !== index).reduce((acc,cur) => acc+ cur,0)
-          item.refund = item.refund[index]
-          item.tax = item.tax.filter((el,i)=> i !== index).reduce((acc,cur) => acc+ cur,0)
-          item.order_total = item.order_total[index]
+          item.quantity = Array.isArray(item.quantity) ? item.quantity.filter((_,i)=> i !== index).reduce((acc,cur) => acc+ cur,0): item.quantity
+          item.refund = Array.isArray(item.refund) ? item.refund[index] : item.refund
+          item.tax = Array.isArray(item.tax) ? item.tax.filter((_,i)=> i !== index).reduce((acc,cur) => acc+ cur,0) : item.tax
+          item.order_total = Array.isArray(item.order_total) ? item.order_total[index] : item.order_total
           item.order_status = 'partially cancelled'
         }
       })

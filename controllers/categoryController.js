@@ -7,7 +7,7 @@ const getCategories = async (req, res) => {
   const limit = parseInt(req.query.limit) || 5;
   const skip = (page - 1) * limit;
 
-  const categories = await Categories.find().skip(skip).limit(limit)
+  const categories = await Categories.find().skip(skip).limit(limit).sort({createdAt:-1})
   const count = await Categories.countDocuments();
   const totalPages = Math.ceil(count / limit);
 

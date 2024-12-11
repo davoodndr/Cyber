@@ -279,14 +279,15 @@
 
   </section>
 
+  {{!-- related products --}}
   <section class="discount-section">
     <h2 class="discount-title mb-4">Related Products</h2>
     <div class="product-row">
       {{#each related_products}}
         <div class="product-item-card border">
-          <div class="bg-warning product-warning-badge">
+          {{!-- <div class="bg-warning product-warning-badge">
             <span class="badge">New</span>
-          </div>
+          </div> --}}
           <a href="/view-product/{{this.product_slug}}" class="card-detail-wrapper">
             <div class="card-img-wrapper">
               <img src="{{this.images.[0]}}" alt="{{this.product_name}}">
@@ -444,46 +445,7 @@
     })(jQuery);
 
     // add to cart
-    $('.btn-add-cart').on('click', function(e){
-      const user = '{{{json user}}}'
 
-
-      if(!user){
-        Toast(2500,'error','Please login to add product to cart')
-        return false
-      }
-
-      let productId = '{{product._id}}'
-      let data = {
-        product_id: productId,
-      }
-      
-      $.ajax({
-        type: 'POST',
-        url: '/add-to-cart?increase=true',
-        data: data,
-        success: function(response) {
-          
-          if(!response.success){
-            Toast(5000,'error',response.msg).then(() => {
-              // quantity check here to detect if it is button click or input change
-              if(response.quantity) location.reload()  
-            })
-            return false
-          }
-          if(response.success){
-            $('.cart .bubble').attr('aria-label', `${response.values.cart_count}`)
-            $('.cart .bubble').removeClass('hide')
-            Toast(1500,'success','Product added to cart')
-          }
-        },
-        error: function(error) {
-          console.log(error);
-        }
-      })
-
-    })
-  
     // show code
     function viewCode(index){
       const isHidden = $('.coupon-container .coupon-code-copier').eq(index).css('visibility') === 'hidden'
@@ -493,29 +455,5 @@
         $('.coupon-container .coupon-code-copier').eq(index).removeClass('show')
       }
     }
-
-    const products = {{{json related_products}}}
-    products.forEach((product,i) => {
-      const badge_wrapper = $('.product-row .product-item-card').eq(i).find('.product-warning-badge')
-      const badge = $('.product-row .product-item-card').eq(i).find('.product-warning-badge .badge')
-      {{!-- if(product.coupons.length > 0){
-        $(badge_wrapper).addClass('bg-warning-subtle')
-          $(badge).addClass('text-black')
-          $(badge).html('Coupon')
-      } --}}
-      if(product.product_status === 'disabled' || 
-        product.category.category_status === 'disabled' {{!-- ||
-        product.coupons.length > 0 --}}){
-          $(badge_wrapper).removeClass('d-none')
-        }else{
-          $(badge_wrapper).addClass('d-none')
-        }
-      if(product.product_status === 'disabled' || product.category.category_status === 'disabled'){
-        $(badge_wrapper).addClass('bg-danger-subtle')
-        $(badge).addClass('text-danger')
-        $(badge).html('Unavailable')
-      }
-      
-    })
 
   </script>

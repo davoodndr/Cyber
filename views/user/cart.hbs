@@ -242,8 +242,11 @@
     $.ajax({
       type: 'DELETE',
       url:  `/remove-from-cart/${itemId}/${product_id}?${queries}`,
+      beforeSend: function(){
+        $('.loader-bg').css('display','flex')
+      },
       success: function(response) {
-        
+        $('.loader-bg').css('display','none')
         if(response.success){
           createCartTemplate(response.cart)
           $('.discount-val').html(response.discounts)
@@ -267,6 +270,7 @@
       },
       error: function(error) {
         console.log(error);
+        $('.loader-bg').css('display','none')
       }
     })
   }
@@ -374,7 +378,6 @@
   })
 
   $('.apply-btn.remove').on('click', function(){
-
 
     $.ajax({
       type: 'DELETE',

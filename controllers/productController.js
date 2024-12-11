@@ -160,7 +160,7 @@ exports.publishProduct = async (req, res) => {
   }
 
   
-  const newProduct = new Product({
+  const newProduct = {
     product_name,
     product_slug,
     product_status,
@@ -174,11 +174,11 @@ exports.publishProduct = async (req, res) => {
     specifications,
     variants,
     images
-  })
+  }
 
   const {section} = req.query
 
-  await saveProduct(images,section,product_slug,newProduct)
+  await saveProduct(images,section,newProduct)
   .then(()=>{
     return res.send(fn.sendResponse(201,'Success!','success','Product created successfully'))
   }).catch((error) =>{
@@ -412,7 +412,7 @@ const saveProduct = async (files,section,product) => {
   
       const images = []
 
-      const isExist = await Product.find(
+      const isExist = await Product.findOne(
         {
           $or:[{product_name:product.product_name},{product_slug:product.product_slug}]
         }
@@ -436,10 +436,13 @@ const saveProduct = async (files,section,product) => {
       );
   
       product.images = images;
-  
-      await product.save();
 
-      resolve(product);
+      console.log(product)
+      
+      const newProduct = new Product(product);
+      await newProduct.save();
+
+      resolve(newProduct);
   
     } catch (error) {
       console.error('Error Saving product:', error);

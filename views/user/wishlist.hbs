@@ -27,7 +27,7 @@
         <div class="product-row">
           {{#each wishlist}}
             <div class="product-item-card wishlist-item">
-              <a class="product-header cursor-pointer z-10" style="top: 1.5%;" onclick="removeItem('{{this._id}}')">
+              <a class="product-header cursor-pointer z-10" style="top: 1.5%;" onclick="removeWishlistItem('{{this._id}}')">
                 <i class="las la-times fs-4 border rounded product-badge"></i>
               </a>
               <a href="/view-product/{{this.product.product_slug}}" class="card-detail-wrapper">
